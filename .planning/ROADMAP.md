@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Quality + Graph Foundation** — PRs #5 ★ #8 ★ — typed entity/relationship extraction + quality scoring + self-healing lint (completes MVP-5)
 - [x] **Phase 3: Lifecycle Layer** — PRs #2 #3 #4 — supersession, retention decay, consolidation tiers (all dep on #1)
 - [x] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
-- [ ] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
+- [x] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
 - [ ] **Phase 6: Automation + Collaboration** — PRs #13 #14 — event hooks + multi-agent mesh sync (dep on most above)
 - [ ] **Phase 7: Schema + Migration Docs** — PR #15 — canonical v2 schema document + migration guide for existing users (dep on all)
 
@@ -74,11 +74,11 @@ Plans:
 **Goal**: Higher-order reasoning over the vault — contradiction detection checks new claims against existing ones (#9) and proposes resolution; crystallization (#10) distills multi-session threads into structured digests.
 **Depends on**: Phase 1 + Phase 2 + Phase 3 (#9 deps #1, #2, #5; #10 deps #1, #5)
 **Research**: Unlikely (contradiction detection and crystallization are agent reasoning patterns implemented in SKILL.md; no new library or external service needed)
-**Plans**: TBD
+**Plans**: Complete (2 PLAN.md files, 2 SUMMARY.md files — 2026-04-15)
 
 Plans:
-- [ ] 05-01: PR #9 — Contradiction detection on write; check incoming claims against existing pages, flag conflicts, propose resolution strategy
-- [ ] 05-02: PR #10 — `wiki-crystallize` skill; distill session threads and raw notes into structured digests with confidence and provenance
+- [x] 05-01: PR #9 — Contradiction detection on write; check incoming claims against existing pages, flag conflicts, propose resolution strategy
+- [x] 05-02: PR #10 — `wiki-crystallize` skill; distill session threads and raw notes into structured digests with confidence and provenance
 
 ### Phase 6: Automation + Collaboration
 **Goal**: Autonomous vault maintenance and multi-agent coordination — event hooks (#13) fire on session boundaries and source ingestion; multi-agent mesh sync (#14) resolves conflicts across concurrent vault states.
@@ -111,6 +111,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Quality + Graph Foundation | 2/2 | **Complete** | 2026-04-15 |
 | 3. Lifecycle Layer | 3/3 | **Complete** | 2026-04-15 |
 | 4. Graph Traversal + Hybrid Search | 2/2 | **Complete** | 2026-04-15 |
-| 5. Cross-cutting Intelligence | 0/2 | Not started | - |
+| 5. Cross-cutting Intelligence | 2/2 | **Complete** | 2026-04-15 |
 | 6. Automation + Collaboration | 0/2 | Not started | - |
 | 7. Schema + Migration Docs | 0/1 | Not started | - |

@@ -182,6 +182,8 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 - **Consolidation tiers.** Pages move through `working -> episodic -> semantic -> procedural` as evidence accumulates, using `tier`, `promoted_from`, and `promotion_evidence_count` metadata to preserve provenance across promotions.
 
+- **Write-time contradiction detection + crystallization.** `wiki-ingest` now runs a contradiction preflight against overlapping pages before writes, then either supersedes decisively or preserves both claims as ambiguous. `wiki-crystallize` converts sessions/threads into structured episodic/semantic digests.
+
 - **Multimodal sources.** Screenshots, whiteboard photos, slide captures, and diagrams ingest the same way as text — the agent transcribes any visible text verbatim and tags interpreted content as inferred. Requires a vision-capable model.
 
 - **Wiki insights.** Beyond delta tracking, `wiki-status` can analyze the shape of your vault itself: top hubs, bridge pages (nodes whose removal would partition the graph), tag cluster cohesion scores, scored surprising connections, a graph delta since last run, and suggested questions the wiki structure is uniquely positioned to answer. Output goes to `_insights.md`.
@@ -265,6 +267,7 @@ Everything lives in `.skills/`. Each skill is a markdown file the agent reads wh
 | ----------------------- | ------------------------------------------------- | ------------------------ |
 | `wiki-setup`            | Initialize vault structure                        | `/wiki-setup`            |
 | `wiki-ingest`           | Distill documents into wiki pages                 | `/wiki-ingest`           |
+| `wiki-crystallize`      | Distill sessions/threads into digest pages        | `/wiki-crystallize`      |
 | `entity-extract`        | Extract typed entities/relationships to `_graph/` | (invoked by wiki-ingest) |
 | `wiki-history-ingest`   | Unified history router (`claude` or `codex`)      | `/wiki-history-ingest <claude|codex>` |
 | `claude-history-ingest` | Mine your `~/.claude` conversations and memories  | `/claude-history-ingest` |
@@ -312,6 +315,7 @@ obsidian-wiki/
 ├── .skills/                          # ← Canonical skill definitions (source of truth)
 │   ├── wiki-setup/SKILL.md
 │   ├── wiki-ingest/SKILL.md
+│   ├── wiki-crystallize/SKILL.md
 │   ├── entity-extract/SKILL.md
 │   ├── wiki-history-ingest/SKILL.md
 │   ├── claude-history-ingest/SKILL.md

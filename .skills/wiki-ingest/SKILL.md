@@ -177,6 +177,30 @@ Before writing anything, plan which pages to update or create. Aim for 10-15 pag
 - If it's new, which category does it belong in?
 - What `[[wikilinks]]` should connect it to existing pages?
 
+### Step 4a: Contradiction Preflight (cross-page)
+
+Before writing, run a contradiction scan across existing pages that overlap the same entities/attributes:
+
+1. Build a candidate set from:
+   - pages linked in Step 4 planning
+   - pages sharing entity IDs in `entities:` frontmatter
+   - pages connected by `_graph/edges.jsonl` with `contradicts` or `supersedes`
+2. For each high-value incoming claim, compare against existing claims for the same entity+attribute pair.
+3. Label each comparison:
+   - `no_conflict` (compatible)
+   - `possible_conflict` (same slot, uncertain disagreement)
+   - `conflict` (clear disagreement)
+4. For `possible_conflict` and `conflict`, add a short "resolution plan" note before writing:
+   - target page(s)
+   - keep-both-with-ambiguity or supersede-old-claim
+   - why (confidence/source strength recency)
+
+Write behavior:
+- `possible_conflict`: keep both claims, mark `^[ambiguous]`, add follow-up in `## Open Questions`.
+- `conflict`: apply the Step 5x supersession flow.
+
+Do not silently overwrite conflicting claims anywhere in the vault.
+
 ### Step 5: Write/Update Pages
 
 For each page in your plan:
@@ -366,6 +390,8 @@ After ingesting, verify:
 - [ ] Contradictions moved prior claim into `## Superseded` with `superseded_on`, `superseded_by_source`, `previous_confidence`
 - [ ] Ambiguous conflicts marked `^[ambiguous]` without superseding
 - [ ] `supersession_count` updated only on true supersession
+- [ ] Contradiction preflight run before writes for high-value claims
+- [ ] Conflicts include explicit resolution notes (supersede vs keep-ambiguous)
 - [ ] Every new page has `tier`, `promoted_from`, and `promotion_evidence_count`
 - [ ] Promotions include provenance links and evidence counts
 - [ ] Lower-tier source context retained after promotion

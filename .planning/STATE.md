@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Ingesting more sources makes the wiki more useful, not noisier — knowledge compounds rather than rots
-**Current focus:** Phase 5 — Cross-cutting Intelligence (ready to start)
+**Current focus:** Phase 6 — Automation + Collaboration (ready to start)
 
 ## Current Position
 
-Phase: 4 of 7 (Graph Traversal + Hybrid Search) — **COMPLETE**
+Phase: 5 of 7 (Cross-cutting Intelligence) — **COMPLETE**
 Plan: 2/2 complete
-Status: Phase 4 executed (04-01, 04-02 complete); Phase 5 ready
-Last activity: 2026-04-15 — Phase 4 executed and summary artifacts created
+Status: Phase 5 executed (05-01, 05-02 complete); Phase 6 ready
+Last activity: 2026-04-15 — Phase 5 executed and summary artifacts created
 
-Progress: ███████░░░ 69%
+Progress: ████████░░ 79%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 13
 - Average duration: ~11 min/plan
-- Total execution time: ~120 min
+- Total execution time: ~142 min
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: ███████░░░ 69%
 | 2. Quality + Graph Foundation | 2 | ~25 min | ~12 min |
 | 3. Lifecycle Layer | 3 | ~33 min | ~11 min |
 | 4. Graph Traversal + Hybrid Search | 2 | ~22 min | ~11 min |
+| 5. Cross-cutting Intelligence | 2 | ~22 min | ~11 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02, 03-01, 03-02, 03-03, 04-01, 04-02
-- Trend: steady execution; Phase 4 retrieval layer closed cleanly, ready for cross-cutting intelligence
+- Last 5 plans: 03-03, 04-01, 04-02, 05-01, 05-02
+- Trend: steady execution; Phase 5 reasoning layer landed cleanly, ready for automation/collaboration work
 
 ## Accumulated Context
 
@@ -60,5 +61,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-15
-Stopped at: Phase 4 complete — ready to begin 05-01 contradiction detection execution
+Stopped at: Phase 5 complete — ready to begin 06-01 event hooks execution
 Resume file: None

@@ -318,6 +318,8 @@ Promotion thresholds:
 
 Promotions compile knowledge upward and preserve lower-tier provenance by default. Use `promoted_from` links and wikilinks between source and promoted pages.
 
+Write-time contradiction handling extends this model: new ingest/crystallization passes must run conflict checks against existing claims and either supersede decisively or preserve both claims with `^[ambiguous]`.
+
 **`quality`** (float, 0.0–1.0): Page health score computed from seven signals (confidence, sources_count, summary presence, wikilink count, entities count, body length, freshness of `last_confirmed`). See `wiki-ingest/SKILL.md` Step 5a for the exact heuristic. Pages scoring < 0.4 are flagged "low quality" by `wiki-lint`. Default: computed at write time; pages without it get a fresh score on next lint run. Not retroactively computed on pages not being touched.
 
 ### Graph Layer
@@ -440,6 +442,7 @@ For details on specific operations, see the companion skills:
 - **wiki-status** — Audit what's ingested, compute delta, recommend append vs rebuild
 - **wiki-rebuild** — Archive current wiki, rebuild from scratch, or restore from archive
 - **wiki-ingest** — Distill source documents into wiki pages
+- **wiki-crystallize** — Distill sessions/threads into structured episodic or semantic digest pages
 - **entity-extract** — Extract typed entities and relationships; populate `_graph/` files and `entities:` frontmatter
 - **claude-history-ingest** — Ingest Claude conversation history
 - **codex-history-ingest** — Ingest Codex CLI session history
