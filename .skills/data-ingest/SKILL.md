@@ -36,6 +36,7 @@ Apply this filter to all raw source text before extracting knowledge, regardless
 
 **Redact in credential context** (inside `.env` files, config blocks, JSON auth responses):
 - Email addresses found alongside API credentials or auth config → `[REDACTED:email]`
+- YAML/TOML values near keys like `password`, `api_key`, `token`, `secret` → treat as secrets and redact values
 
 **Never redact:**
 - Email addresses that are the subject of knowledge distillation (e.g. a page about email deliverability can contain example addresses)
@@ -51,6 +52,8 @@ Read the file(s) the user points you at. Common formats you'll encounter:
 | Format | How to identify | How to read |
 |---|---|---|
 | **JSON / JSONL** | `.json` / `.jsonl` extension, starts with `{` or `[` | Parse with Read tool, look for message/content fields |
+| **YAML / TOML** | `.yaml` / `.yml` / `.toml` | Read as text, infer schema-like structure, extract stable keys, redact secret-bearing values |
+| **LaTeX / BibTeX** | `.tex` / `.ltx` / `.bib` | Read as text; distill claims/citations and follow `wiki-ingest` long-form document conventions |
 | **Markdown** | `.md` extension | Read directly |
 | **Plain text** | `.txt` extension or no extension | Read directly |
 | **CSV / TSV** | `.csv` / `.tsv`, comma or tab separated | Parse rows, identify columns |

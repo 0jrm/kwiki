@@ -40,3 +40,14 @@ After extracting knowledge, look for these connection patterns:
 - **Part-of**: "Attention is a component of transformers" → link from attention to transformers
 - **Created-by**: "Transformers were introduced by Vaswani et al." → link to entity page
 - **Applied-in**: "Transformers are used in GPT" → link from transformers to GPT
+
+## LaTeX and BibTeX sources
+
+Use these frames when the source corpus includes `.tex` or `.bib` files:
+
+- **BibTeX entry typing**: map `@article`, `@inproceedings`, `@book`, `@misc`, and `@techreport` into entity/reference-oriented wiki targets; preserve each cite key for traceability.
+- **Field extraction**: treat `title`, `author`, `year`, `journal`/`booktitle`, and `doi`/`url` as extracted claims; avoid dumping full entry blobs unless needed.
+- **LaTeX claim extraction**: prioritize definitions, theorems, assumptions, and explicitly stated conclusions; convert notation-heavy passages into plain-language claims.
+- **Math paraphrase provenance**: when translating notation into prose, mark the paraphrased claim with `^[inferred]` unless the exact wording appears in the source.
+- **Citation alignment**: map `\cite{foo}` mentions to the same wiki target that would be produced from BibTeX key `foo` so links converge across `.tex` and `.bib` ingests.
+- **Preamble/macro bias**: deprioritize long preambles, style directives, and macro scaffolding unless they encode reusable conceptual meaning.

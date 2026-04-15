@@ -55,7 +55,7 @@ Anything text-based:
 
 | Source | Skill | What it reads |
 |---|---|---|
-| Markdown, PDFs, text files | `wiki-ingest` | Any document directory |
+| Markdown, PDFs, text files, LaTeX/BibTeX (`.tex`, `.bib`), structured text (`.yaml`, `.yml`, `.toml`, `.json`, `.xml`), docs markup (`.rst`, `.adoc`, `.org`) | `wiki-ingest` | Any document directory (canonical extension list is in `wiki-ingest`) |
 | Claude Code history | `claude-history-ingest` | `~/.claude/` — conversations, memories, sessions |
 | Codex CLI history | `codex-history-ingest` | `~/.codex/` — sessions, rollouts, history index |
 | ChatGPT exports | `data-ingest` | `conversations.json` from ChatGPT export |

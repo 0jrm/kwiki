@@ -47,6 +47,7 @@ Before writing any content to a vault page, scan the source text for sensitive p
 
 **Redact in credential context** (inside `.env` files, config blocks, JSON auth responses):
 - Email addresses found alongside API credentials or auth config → `[REDACTED:email]`
+- YAML/TOML credential values near keys like `password`, `api_key`, `token`, `secret` → redact value as credential material
 
 **Never redact:**
 - Email addresses that are the subject of knowledge distillation (e.g. a page about email deliverability can contain example addresses)
@@ -90,12 +91,31 @@ In raw mode, each file in `OBSIDIAN_VAULT_PATH/_raw/` (or `OBSIDIAN_RAW_DIR`) is
 
 ### Step 1: Read the Source
 
-Read the document(s) the user wants to ingest. In append mode, skip files the manifest says are already ingested and unchanged. Supported formats:
-- Markdown (`.md`) — read directly
-- Text (`.txt`) — read directly
-- PDF (`.pdf`) — use the Read tool with page ranges
-- Web clippings — markdown files from Obsidian Web Clipper
-- **Images** (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`) — *requires a vision-capable model*. Use the Read tool, which renders the image into your context. Treat screenshots, whiteboard photos, diagrams, and slide captures as first-class sources. If your model doesn't support vision, skip image sources and tell the user which files were skipped so they can re-run with a vision-capable model.
+Read the document(s) the user wants to ingest. In append mode, skip files the manifest says are already ingested and unchanged.
+
+Supported formats (canonical catalog):
+
+- **LaTeX and bibliography**
+  - `.tex`, `.ltx`, `.sty`, `.cls` — read as text; treat `%` comments as non-authoritative unless they contain distilled notes worth keeping
+  - `.bib` — BibTeX/BibLaTeX entries; distill cited works as `[[entities]]` or references and capture key fields (title, year, author) as extracted claims
+  - `.bst` — BibTeX style files; usually boilerplate, ingest only when user-directed
+- **Structured / serialization (human-readable)**
+  - `.yaml`, `.yml` — separate knowledge content (specs, curated mappings) from deployment secrets; apply PII filter aggressively
+  - `.toml` — config/manifests; extract architecture-relevant keys and redact credentials
+  - `.json`, `.json5`, `.xml` — ingest when they are specs/exports and text-readable
+- **Documentation markup (plain-text readable)**
+  - `.rst`, `.adoc`, `.asciidoc`, `.org` — read as text and map headings/roles into concepts/skills similarly to markdown
+- **Already supported (unchanged)**
+  - `.md`, `.txt`, `.pdf`, web clippings
+  - **Images** (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`) — *requires a vision-capable model*. Use the Read tool, which renders the image into your context. Treat screenshots, whiteboard photos, diagrams, and slide captures as first-class sources. If your model doesn't support vision, skip image sources and tell the user which files were skipped so they can re-run with a vision-capable model.
+- **Explicit exclusions (unless user forces a path)**
+  - Binary assets without text extraction (for example `.docx`, `.pptx`, `.zip`)
+  - Vendor/build directories (`node_modules/`, `.git/`, `dist/`, `build/`, `__pycache__/`)
+
+Per-format distillation notes:
+- LaTeX: prioritize `\section`/`\subsection`, theorem/definition environments, and citation anchors (`\cite`, `\bibliography`); deprioritize macro-heavy preamble noise.
+- BibTeX: create one notable reference/entity entry per meaningful cite key; dedupe by cite key.
+- YAML/TOML: preserve schema-level meaning, not full secret-bearing payloads; summarize structure and redact sensitive values before writing.
 
 Note the source path — you'll need it for provenance tracking.
 

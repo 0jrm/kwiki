@@ -72,7 +72,9 @@ Build an inventory of everything available to ingest right now:
 
 ### Documents (from `OBSIDIAN_SOURCES_DIR`)
 ```
-Glob each directory in OBSIDIAN_SOURCES_DIR for all text files
+Glob each directory in OBSIDIAN_SOURCES_DIR using the same extension catalog defined in wiki-ingest Step 1 (treat wiki-ingest as canonical; do not maintain a second list here)
+Exclude known junk directories by default when scanning: node_modules/, .git/, dist/, build/, __pycache__/
+If a directory yields zero matches for the wiki-ingest extension set, report that explicitly (useful for diagnosing OBSIDIAN_SOURCES_DIR misconfiguration)
 Record: path, size, modification time
 ```
 

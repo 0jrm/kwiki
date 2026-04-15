@@ -17,7 +17,7 @@ You are maintaining a persistent, compounding knowledge base. The wiki is not a 
 
 ### Layer 1: Raw Sources (immutable)
 
-The user's original documents — articles, papers, notes, PDFs, conversation logs, bookmarks, **and images** (screenshots, whiteboard photos, diagrams, slide captures). These are never modified by the system. They live wherever the user keeps them (configured via `OBSIDIAN_SOURCES_DIR` in `.env`). Images are first-class sources: the ingest skills read them via the Read tool's vision support and treat their interpreted content as inferred unless it's verbatim transcribed text. Image ingestion requires a vision-capable model — models without vision support should skip image sources and report which files were skipped.
+The user's original documents — articles, papers, notes, PDFs, conversation logs, bookmarks, **and images** (screenshots, whiteboard photos, diagrams, slide captures). Sources can also include text-first technical formats like LaTeX/BibTeX (`.tex`, `.bib`), structured config/spec files (`.yaml`, `.yml`, `.toml`, `.json`, `.xml`), and documentation markup (`.rst`, `.adoc`, `.org`) when they carry knowledge worth distilling. These are never modified by the system. They live wherever the user keeps them (configured via `OBSIDIAN_SOURCES_DIR` in `.env`). Images are first-class sources: the ingest skills read them via the Read tool's vision support and treat their interpreted content as inferred unless it's verbatim transcribed text. Image ingestion requires a vision-capable model — models without vision support should skip image sources and report which files were skipped.
 
 Think of raw sources as the "source code" — authoritative but hard to query directly.
 
