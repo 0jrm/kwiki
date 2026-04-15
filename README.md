@@ -231,6 +231,7 @@ Everything lives in `.skills/`. Each skill is a markdown file the agent reads wh
 | ----------------------- | ------------------------------------------------- | ------------------------ |
 | `wiki-setup`            | Initialize vault structure                        | `/wiki-setup`            |
 | `wiki-ingest`           | Distill documents into wiki pages                 | `/wiki-ingest`           |
+| `entity-extract`        | Extract typed entities/relationships to `_graph/` | (invoked by wiki-ingest) |
 | `wiki-history-ingest`   | Unified history router (`claude` or `codex`)      | `/wiki-history-ingest <claude|codex>` |
 | `claude-history-ingest` | Mine your `~/.claude` conversations and memories  | `/claude-history-ingest` |
 | `codex-history-ingest`  | Mine your `~/.codex` sessions and rollout logs    | `/codex-history-ingest`  |
@@ -277,6 +278,7 @@ obsidian-wiki/
 ├── .skills/                          # ← Canonical skill definitions (source of truth)
 │   ├── wiki-setup/SKILL.md
 │   ├── wiki-ingest/SKILL.md
+│   ├── entity-extract/SKILL.md
 │   ├── wiki-history-ingest/SKILL.md
 │   ├── claude-history-ingest/SKILL.md
 │   ├── codex-history-ingest/SKILL.md

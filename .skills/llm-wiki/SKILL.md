@@ -198,6 +198,7 @@ confidence: 0.5
 sources_count: 1
 last_confirmed: 2024-03-15T10:30:00Z
 decay_rate: "medium"
+entities: []
 created: 2024-03-15T10:30:00Z
 updated: 2024-03-15T10:30:00Z
 ---
@@ -256,6 +257,20 @@ Example:
 | `decay_rate` | `"low"` \| `"medium"` \| `"high"` | How quickly content goes stale. Low = timeless concepts. Medium = tools, APIs, practices. High = versions, pricing, current events. | `"medium"` |
 
 Pages without these fields (existing vaults, pre-v2 pages) are **not retroactively rewritten** — they're treated as `confidence: 0.5`, `decay_rate: "medium"` at read time.
+
+### Graph Layer
+
+The vault maintains a typed knowledge graph alongside the markdown pages:
+
+- **`_graph/entities.jsonl`** — one entity per line, typed by `person`, `project`, `library`, `concept`, `file`, or `decision`. Each has an `id` (`{type}:{slug}`), `name`, `sources`, and timestamps.
+- **`_graph/edges.jsonl`** — one relationship per line, with `src_id`, `dst_id`, typed edge (e.g. `uses`, `depends_on`, `supersedes`), confidence, sources, and timestamps.
+- **`entities:`** frontmatter field — a list of entity IDs present on the page (format `{type}:{slug}`). Populated automatically by the `entity-extract` skill after each page write.
+
+The `entity-extract` skill populates these files; pages without the `entities:` field continue to work (treated as `[]` at read time). Skills that use the graph: `cross-linker` (graph-aware matching), `wiki-query` (graph traversal in PR #6), and contradiction detection (PR #9).
+
+**Entity types (fixed vocabulary):** `person`, `project`, `library`, `concept`, `file`, `decision`.  
+**Edge types (fixed vocabulary):** `uses`, `depends_on`, `contradicts`, `caused`, `fixed`, `supersedes`, `mentions`, `owned_by`, `related_to`.  
+**Edge confidence ladder:** 0.6 (1 source) → 0.8 (2) → 0.9 (3+).
 
 **Frontmatter summary:** Optionally surface the rough mix at the page level so the user can scan for speculation-heavy pages without reading them:
 
@@ -329,6 +344,7 @@ For details on specific operations, see the companion skills:
 - **wiki-status** — Audit what's ingested, compute delta, recommend append vs rebuild
 - **wiki-rebuild** — Archive current wiki, rebuild from scratch, or restore from archive
 - **wiki-ingest** — Distill source documents into wiki pages
+- **entity-extract** — Extract typed entities and relationships; populate `_graph/` files and `entities:` frontmatter
 - **claude-history-ingest** — Ingest Claude conversation history
 - **codex-history-ingest** — Ingest Codex CLI session history
 - **data-ingest** — Ingest any raw text data

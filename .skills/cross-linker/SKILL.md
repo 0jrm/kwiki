@@ -21,6 +21,7 @@ You are weaving the wiki's knowledge graph tighter by finding and inserting miss
 1. Read `.env` to get `OBSIDIAN_VAULT_PATH`
 2. Read `index.md` to get the full inventory of pages and their one-line descriptions
 3. Skim `log.md` to see what was recently ingested (focus linking effort on new pages)
+4. If `_graph/entities.jsonl` exists, prefer graph-aware linking. Pass `--use-graph` when invoking, or check the file yourself and set internal flag `use_graph=true`. This is the default when the file is present.
 
 ## Step 1: Build the Page Registry
 
@@ -64,6 +65,17 @@ For each page in the vault:
 - **Don't link inside code blocks** or frontmatter
 - **Don't double-link** — if `[[foo]]` already appears on the page, don't add another
 
+## Step 2.5: Graph-Aware Matching (when --use-graph)
+
+If `_graph/entities.jsonl` exists and `--use-graph` is set (default when the file is present):
+
+1. Load all entities from `_graph/entities.jsonl` into a map keyed by `name` and by each alias in `attributes.aliases` (if present).
+2. When scanning for missing links, prefer a match against a known entity name over a raw string match against page titles.
+3. For matched entities, the link target is the entity's primary page — resolve via reverse lookup: find the page whose `entities:` frontmatter contains the entity ID and whose `title` most closely matches the entity name.
+4. If no page exists for the entity yet (common for entities extracted from journal/raw content before a formal page is created), record a suggestion: "candidate page: `{category}/{slug}.md`" but do **not** create the file automatically.
+
+Entity-based matches rank above raw-string matches in Step 3 scoring (add +0.2 to the match confidence when an entity backs the match).
+
 ## Step 3: Score and Rank Suggestions
 
 Not every possible link is worth adding. Score each candidate using a composite signal, then tag it with a confidence label.
@@ -79,6 +91,7 @@ Not every possible link is worth adding. Score each candidate using a composite 
 | **Cross-category connection** | +2 | Source is in `concepts/`, target is in `entities/` (or `skills/` ↔ `synthesis/`) — different knowledge layers make this link more architecturally valuable |
 | **Peripheral→hub reach** | +2 | Source page has ≤ 2 total links (peripheral) but target has ≥ 8 (hub) — connecting a loose page to a load-bearing concept |
 | **Partial name match** | +1 | "graph" appears but page is `knowledge-graphs` — plausible but ambiguous |
+| **Entity-backed match bonus** | +0.2 | Match is backed by an entity in `_graph/entities.jsonl` — typed graph knowledge is more reliable than string overlap |
 
 ### Confidence labels
 
@@ -168,6 +181,7 @@ After cross-linking, verify:
 - [ ] Cross-Link Report produced with links added and orphans remaining
 - [ ] `log.md` updated with CROSS_LINK entry
 - [ ] Audit entries written to `_meta/audit.jsonl` for each page modified
+- [ ] When `_graph/` exists, entity-backed matches were preferred over raw string matches (Step 2.5 ran)
 
 ## Tips
 
