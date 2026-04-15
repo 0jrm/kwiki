@@ -30,6 +30,12 @@ This project is a **skill-based framework** for building and maintaining an Obsi
 | "rebuild" / "start over" / "archive" | `.skills/wiki-rebuild/SKILL.md` |
 | "link my pages" / "cross-reference" | `.skills/cross-linker/SKILL.md` |
 | "fix my tags" / "normalize tags" | `.skills/tag-taxonomy/SKILL.md` |
+| "update wiki" / "sync to wiki" | `.skills/wiki-update/SKILL.md` |
+| "export wiki" / "export graph" | `.skills/wiki-export/SKILL.md` |
+| "crystallize" / "distill session" | `.skills/wiki-crystallize/SKILL.md` |
+| "sync vault" / "reconcile" / "multi-agent" | `.skills/wiki-sync/SKILL.md` |
+| "extract entities" / "build graph" | `.skills/entity-extract/SKILL.md` |
+| "v2 schema" / "migration guide" | `.skills/llm-wiki-v2-schema/SKILL.md` |
 | "create a new skill" | `.skills/skill-creator/SKILL.md` |
 
 ## Key Rules
@@ -39,3 +45,4 @@ This project is a **skill-based framework** for building and maintaining an Obsi
 - **Always update `index.md` and `log.md`** after any operation.
 - **Use `[[wikilinks]]`** to connect related pages.
 - **Frontmatter is required** on every wiki page.
+- **v2 schema reference:** `.skills/llm-wiki-v2-schema/SCHEMA.md` is the canonical spec for all v2 fields, graph format, audit, retrieval, and migration.

@@ -19,8 +19,13 @@ $OBSIDIAN_VAULT_PATH/
 ├── log.md                  # Chronological activity log (ingests, updates, lints)
 ├── .manifest.json          # Tracks every ingested source: path, timestamps, pages produced
 ├── _meta/
-│   └── taxonomy.md         # Controlled tag vocabulary
+│   ├── taxonomy.md         # Controlled tag vocabulary
+│   └── audit.jsonl         # Append-only audit log for every wiki operation
+├── _graph/
+│   ├── entities.jsonl      # Typed entity records (person, project, library, concept, etc.)
+│   └── edges.jsonl         # Typed relationships between entities
 ├── _insights.md            # Graph analysis output (hubs, bridges, dead ends)
+├── _archive/               # Timestamped vault snapshots from wiki-rebuild
 ├── _raw/                   # Staging area — drop rough notes here, next ingest promotes them
 ├── concepts/               # Abstract ideas, patterns, mental models
 ├── entities/               # Concrete things — people, tools, libraries, companies
@@ -32,7 +37,7 @@ $OBSIDIAN_VAULT_PATH/
     └── <project-name>.md   # One page per project synced via wiki-update
 ```
 
-Every wiki page has required frontmatter: `title`, `category`, `tags`, `sources`, `created`, `updated`. Pages connect via `[[wikilinks]]`.
+Every wiki page has required frontmatter: `title`, `category`, `tags`, `sources`, `created`, `updated`. v2 adds optional fields: `confidence`, `sources_count`, `last_confirmed`, `decay_rate`, `entities`, `quality`, `tier`. Pages connect via `[[wikilinks]]`. See `.skills/llm-wiki-v2-schema/SCHEMA.md` for the full field spec.
 
 ## Skill Routing
 
@@ -55,6 +60,10 @@ Skills live in `.skills/<name>/SKILL.md`. Match the user's intent to the right s
 | "fix my tags" / "normalize tags" / "tag audit" | `tag-taxonomy` |
 | "update wiki" / "sync to wiki" / "save this to my wiki" | `wiki-update` |
 | "export wiki" / "export graph" / "graphml" / "neo4j" | `wiki-export` |
+| "crystallize" / "distill session" / "compile thread" | `wiki-crystallize` |
+| "sync vault" / "reconcile" / "multi-agent" / "merge conflict" | `wiki-sync` |
+| "extract entities" / "build graph" / "knowledge graph" | `entity-extract` |
+| "v2 schema" / "migration guide" / "frontmatter spec" | `llm-wiki-v2-schema` |
 | "create a new skill" | `skill-creator` |
 
 ## Cross-Project Usage

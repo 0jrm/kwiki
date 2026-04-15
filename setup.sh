@@ -3,10 +3,13 @@
 # obsidian-wiki setup — configures skill discovery for all supported AI agents.
 #
 # Usage: bash setup.sh
+# Options:
+#   --skip-qmd    Skip automatic QMD install/check
 #
 # What it does:
-#   1. Creates .env from .env.example (if not present)
-#   2. Symlinks .skills/* into each agent's expected skills directory:
+#   1. Ensures QMD is installed (auto-installs via npm when missing)
+#   2. Creates .env from .env.example (if not present)
+#   3. Symlinks .skills/* into each agent's expected skills directory:
 #      - .claude/skills/    (Claude Code)
 #      - .cursor/skills/    (Cursor)
 #      - .windsurf/skills/  (Windsurf)
@@ -19,6 +22,51 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="$SCRIPT_DIR/.skills"
+SKIP_QMD=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --skip-qmd)
+      SKIP_QMD=1
+      ;;
+    -h|--help)
+      echo "Usage: bash setup.sh [--skip-qmd]"
+      echo ""
+      echo "  --skip-qmd    Skip automatic QMD install/check"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      echo "Usage: bash setup.sh [--skip-qmd]"
+      exit 1
+      ;;
+  esac
+done
+
+ensure_qmd() {
+  if command -v qmd >/dev/null 2>&1; then
+    echo "✅  QMD detected: $(qmd --version 2>/dev/null || echo "installed")"
+    return 0
+  fi
+
+  echo "ℹ️   QMD not found. Installing @tobilu/qmd globally..."
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "❌  npm is required to auto-install QMD but was not found."
+    echo "    Install Node.js 22+ (includes npm), then rerun setup.sh."
+    echo "    Manual fallback: npm install -g @tobilu/qmd"
+    exit 1
+  fi
+
+  npm install -g @tobilu/qmd
+
+  if command -v qmd >/dev/null 2>&1; then
+    echo "✅  Installed QMD successfully"
+  else
+    echo "❌  QMD install command finished, but 'qmd' is still unavailable on PATH."
+    echo "    Ensure your global npm bin directory is on PATH, then rerun setup.sh."
+    exit 1
+  fi
+}
 
 # Symlink every skill in SKILLS_DIR into TARGET_DIR.
 # Skips real directories to avoid data loss; updates stale symlinks.
@@ -46,6 +94,13 @@ echo "╔═══════════════════════�
 echo "║         obsidian-wiki — Agent Setup              ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
+
+# ── Step 0: Ensure QMD ────────────────────────────────────────
+if [ "$SKIP_QMD" -eq 1 ]; then
+  echo "⏭️   Skipping QMD check/install (--skip-qmd)"
+else
+  ensure_qmd
+fi
 
 # ── Step 1: .env ──────────────────────────────────────────────
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
@@ -143,7 +198,9 @@ echo "   .github/copilot-instructions.md → GitHub Copilot"
 echo ""
 echo " Next steps:"
 echo "   1. Open this project in your agent"
-echo "   2. Say: \"Set up my wiki\""
+echo "   2. (Optional) Index your vault with QMD:"
+echo "      qmd index --name wiki \"$VAULT_PATH\""
+echo "   3. Say: \"Set up my wiki\""
 echo ""
 echo " From any other project:"
 echo "   /wiki-update    → sync knowledge into your vault"

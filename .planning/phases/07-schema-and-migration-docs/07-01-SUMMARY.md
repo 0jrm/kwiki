@@ -5,57 +5,45 @@ subsystem: schema-and-migration-governance
 provides: [canonical-v2-schema, migration-playbook, implementation-aligned-reference]
 requires: [foundation-safety, graph-layer, lifecycle-layer, hybrid-retrieval, cross-cutting-intelligence, automation-collaboration]
 affects: [release-readiness, onboarding, future-pr-evals]
+tech-stack:
+  added: []
+  patterns: [single-source-of-truth-schema, compatibility-first-migration, additive-field-design]
+key-files:
+  created:
+    - .skills/llm-wiki-v2-schema/SCHEMA.md
+    - .skills/llm-wiki-v2-schema/SKILL.md
+  modified:
+    - README.md
+    - AGENTS.md
+    - CLAUDE.md
+    - .cursor/rules/obsidian-wiki.mdc
+key-decisions:
+  - "SCHEMA.md is the single canonical v2 reference; bootstrap docs link to it without duplicating detail"
+  - "Migration is compatibility-first: v2 fields are additive, old pages remain readable, missing artifacts degrade gracefully"
+  - "Implementation-aligned: only shipped behavior is documented as implemented; aspirational items are marked as optional extensions"
 ---
 
-# Phase 7 Plan 01: Canonical v2 Schema + Migration Summary
+# Phase 7 Plan 01: Schema + Migration Docs Summary
 
-Shipped a documentation-only closeout for PR #15 by creating a single canonical v2 schema reference and wiring it into primary entrypoints.
+Canonical v2 schema document and migration guide shipped as the definitive reference for every frontmatter field, graph format, audit schema, retrieval fusion, hook contract, sync semantic, and upgrade path.
 
 ## Accomplishments
-
-- Created `.skills/llm-wiki-v2-schema/SCHEMA.md` as the implementation-faithful v2 reference
-- Covered all required schema sections:
-  - entity/relationship types and confidence semantics
-  - frontmatter fields with additive defaults and backward-compat behavior
-  - confidence + decay model and compatibility mapping
-  - quality heuristic thresholds and lint behavior
-  - contradiction/supersession semantics
-  - `_graph/entities.jsonl` and `_graph/edges.jsonl` shapes
-  - retrieval streams (BM25/vector/graph), RRF (`k=60`), fallback, and `--explain`
-  - PII pattern classes and mode knobs
-  - audit schema and operation taxonomy
-  - hook event contracts
-  - sync conflict classes and outcomes
-- Added explicit migration guide in SCHEMA.md with:
-  - preflight checklist
-  - compatibility-first rollout order
-  - minimum required vs optional upgrades
-  - partial-adoption fallback behavior
-  - validation checklist
-  - rollback steps
-- Added canonical-pointer references (without duplicating schema internals) in:
-  - `README.md`
-  - `AGENTS.md`
-  - `CLAUDE.md`
+- Created `.skills/llm-wiki-v2-schema/SCHEMA.md` covering all v2 subsystems: entity types, relationship types, frontmatter spec (base + v2 additive fields), confidence/decay model, quality thresholds, contradiction/supersession semantics, graph storage schema, retrieval schema (BM25 + graph + optional vector with RRF), PII patterns, audit log schema, hook event contracts, and sync conflict classes
+- Added migration guide with preflight checklist, compatibility-first rollout order, minimum required changes vs optional enhancements, per-feature partial-adoption fallback behavior, validation checklist, and rollback guidance
+- Wired schema references into README.md, AGENTS.md, CLAUDE.md, and .cursor/rules
+- Updated skill routing tables across all bootstrap docs to include v2 skills (entity-extract, wiki-crystallize, wiki-sync, _hooks, llm-wiki-v2-schema)
+- Updated vault structure diagrams to reflect v2 additions (_graph/, _archive/, audit.jsonl)
 
 ## Files Created/Modified
-
-- `.skills/llm-wiki-v2-schema/SCHEMA.md` (new)
-- `.planning/phases/07-schema-and-migration-docs/07-01-SUMMARY.md` (new)
-- `README.md` (schema pointer)
-- `AGENTS.md` (schema pointer)
-- `CLAUDE.md` (schema pointer)
-
-## Decisions Made
-
-- Treated summary artifacts from Phases 1-6 as authoritative for "implemented" statements.
-- Marked uncertain/runtime-not-codified details as "not yet implemented" or "optional extension" to avoid overstating shipped behavior.
-- Kept this phase documentation-only to preserve scope lock and avoid behavior drift.
+- `.skills/llm-wiki-v2-schema/SCHEMA.md` — canonical v2 schema + migration guide
+- `.skills/llm-wiki-v2-schema/SKILL.md` — agent routing descriptor
+- `README.md` — v2 schema reference pointer (already present from Phase 6)
+- `AGENTS.md` — updated skill routing, vault structure, schema reference
+- `CLAUDE.md` — updated skill routing, vault structure, schema reference
+- `.cursor/rules/obsidian-wiki.mdc` — updated skill routing, schema reference
 
 ## Issues Encountered
-
 None.
 
-## Phase 7 Complete
-
-The v2 implementation now has a single canonical schema and migration reference aligned to shipped behavior, with top-level docs routed to that source to minimize future drift.
+## Next Step
+All 7 phases complete. Next: dogfooding on real vault, upstream coordination with @Ar9av/obsidian-wiki.

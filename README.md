@@ -30,6 +30,8 @@ bash setup.sh
 
 `setup.sh` asks for your vault path, writes the config to `~/.obsidian-wiki/config`, symlinks skills into all your agents, and installs `wiki-update` globally so you can use it from any project.
 
+`setup.sh` also ensures [QMD](https://github.com/tobi/qmd) is installed. If `qmd` is missing, setup auto-installs it via `npm install -g @tobilu/qmd` so hybrid retrieval features are available by default. To bypass this in constrained environments, run `bash setup.sh --skip-qmd`.
+
 `OBSIDIAN_VAULT_PATH` is just any directory where you want your wiki documents to live. It can be a new empty folder or an existing Obsidian vault. Obsidian will read from it directly.
 
 Open the project in your agent and say **"set up my wiki"**. That's it.
@@ -204,13 +206,13 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 - **Mesh sync for collaboration.** `wiki-sync` adds deterministic multi-agent reconciliation with four conflict classes (`non_overlapping`, `same_page_non_overlapping_sections`, `same_claim_conflict`, `structural_conflict`) and audited outcomes (`merged`, `requires_review`, `aborted`). Single-agent flows remain unchanged when sync is not used.
 
-## Optional: QMD Semantic Search
+## QMD Semantic Search (required runtime, optional indexing)
 
-By default, `wiki-ingest` and `wiki-query` use `Grep`/`Glob` for search — fully functional, no extra setup. If your vault grows large or you want concept-level matches across your sources, you can plug in [QMD](https://github.com/tobi/qmd): a local MCP server that runs lex+vec queries against indexed collections.
+QMD is required as part of project setup and is auto-installed by `setup.sh` if missing. Indexing collections is still optional: without configured collections, `wiki-ingest` and `wiki-query` fall back to `Grep`/`Glob`; with collections configured, they gain semantic retrieval.
 
 **Setup:**
 
-1. Install QMD and add it to your MCP config (see the QMD repo for instructions).
+1. Run `bash setup.sh` (auto-installs QMD when needed), then add QMD to your MCP config if your agent requires explicit MCP registration.
 2. Index your wiki and/or source documents:
    ```bash
    qmd index --name wiki /path/to/your/vault

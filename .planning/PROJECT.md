@@ -30,27 +30,27 @@ The wiki earns trust as it scales — knowledge compounds rather than rots, conn
 <!-- Full v2 = all 15 PRs, ordered by dependency. MVP-5 subset (★) ships first to validate the foundational layer. Each row becomes its own feature branch off v2-integration. -->
 
 **Lifecycle layer**
-- [ ] PR #1 ★ `feat: confidence scoring in frontmatter` — `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields (deps: none)
-- [ ] PR #2 `feat: supersession + version chain` — contradicting claims linked not overwritten (deps: #1)
-- [ ] PR #3 `feat: retention decay in wiki-lint` — Ebbinghaus decay, flag below-threshold pages (deps: #1)
-- [ ] PR #4 `feat: consolidation tiers` — working/episodic/semantic/procedural promotion (deps: #1, #2)
+- [x] PR #1 ★ `feat: confidence scoring in frontmatter` — `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields (deps: none)
+- [x] PR #2 `feat: supersession + version chain` — contradicting claims linked not overwritten (deps: #1)
+- [x] PR #3 `feat: retention decay in wiki-lint` — Ebbinghaus decay, flag below-threshold pages (deps: #1)
+- [x] PR #4 `feat: consolidation tiers` — working/episodic/semantic/procedural promotion (deps: #1, #2)
 
 **Graph layer**
-- [ ] PR #5 ★ `feat: typed entity + relationship extraction` — `_graph/entities.jsonl`, `_graph/edges.jsonl`, new `entity-extract` skill (deps: none)
-- [ ] PR #6 `feat: graph traversal in wiki-query` — walk typed edges during retrieval (deps: #5)
-- [ ] PR #7 `feat: hybrid search with RRF fusion` — BM25 + vector + graph, reciprocal rank fusion (deps: #5, #6)
+- [x] PR #5 ★ `feat: typed entity + relationship extraction` — `_graph/entities.jsonl`, `_graph/edges.jsonl`, new `entity-extract` skill (deps: none)
+- [x] PR #6 `feat: graph traversal in wiki-query` — walk typed edges during retrieval (deps: #5)
+- [x] PR #7 `feat: hybrid search with RRF fusion` — BM25 + vector + graph, reciprocal rank fusion (deps: #5, #6)
 
 **Quality + safety layer**
-- [ ] PR #8 ★ `feat: quality scoring + self-healing lint` — score new pages, auto-fix orphans and broken links (deps: #1)
-- [ ] PR #9 `feat: contradiction detection on write` — check new claims against existing, propose resolution (deps: #1, #2, #5)
-- [ ] PR #10 `feat: crystallization skill` — `wiki-crystallize` distills session threads into structured digests (deps: #1, #5)
-- [ ] PR #11 ★ `feat: ingest-time PII filter` — strip API keys, tokens, emails before write (deps: none)
-- [ ] PR #12 ★ `feat: audit log` — append-only `_meta/audit.jsonl` for every operation (deps: none)
+- [x] PR #8 ★ `feat: quality scoring + self-healing lint` — score new pages, auto-fix orphans and broken links (deps: #1)
+- [x] PR #9 `feat: contradiction detection on write` — check new claims against existing, propose resolution (deps: #1, #2, #5)
+- [x] PR #10 `feat: crystallization skill` — `wiki-crystallize` distills session threads into structured digests (deps: #1, #5)
+- [x] PR #11 ★ `feat: ingest-time PII filter` — strip API keys, tokens, emails before write (deps: none)
+- [x] PR #12 ★ `feat: audit log` — append-only `_meta/audit.jsonl` for every operation (deps: none)
 
 **Automation + collaboration layer**
-- [ ] PR #13 `feat: event hooks` — `.skills/_hooks/` with `on_session_start`, `on_session_end`, `on_new_source` (deps: most of above)
-- [ ] PR #14 `feat: multi-agent mesh sync` — `wiki-sync` skill, conflict resolution across vault states (deps: #1, #12)
-- [ ] PR #15 `docs: v2 schema document + migration guide` — the canonical schema; the gist calls this "the real product" (deps: all)
+- [x] PR #13 `feat: event hooks` — `.skills/_hooks/` with `on_session_start`, `on_session_end`, `on_new_source` (deps: most of above)
+- [x] PR #14 `feat: multi-agent mesh sync` — `wiki-sync` skill, conflict resolution across vault states (deps: #1, #12)
+- [x] PR #15 `docs: v2 schema document + migration guide` — the canonical schema; the gist calls this "the real product" (deps: all)
 
 ### Out of Scope
 
@@ -96,4 +96,4 @@ The wiki earns trust as it scales — knowledge compounds rather than rots, conn
 | `★` marks the weekend MVP-5 subset for dependency-ordering and mid-project scope checks | Even though full scope is committed, the MVP-5 subset (#1, #5, #8, #11, #12) is the "if I had to stop now" checkpoint | — Pending |
 
 ---
-*Last updated: 2026-04-15 after initialization*
+*Last updated: 2026-04-15 — all 15 PRs complete, v2 implementation and documentation done*

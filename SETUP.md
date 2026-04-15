@@ -18,6 +18,14 @@ OBSIDIAN_VAULT_PATH=/path/to/your/vault
 
 That's the only required config.
 
+### Runtime requirement: QMD
+
+`qmd` is required by this project and `setup.sh` installs it automatically when missing.
+
+- Auto-install path: `npm install -g @tobilu/qmd`
+- If `npm` is not available, install Node.js 22+ first, then rerun setup.
+- To skip QMD install/check explicitly: `bash setup.sh --skip-qmd`
+
 ### 2. Point an agent at the skills
 
 Open this project in your coding agent and tell it what you want:

@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
 - [x] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
 - [x] **Phase 6: Automation + Collaboration** — PRs #13 #14 — event hooks + multi-agent mesh sync (dep on most above)
-- [ ] **Phase 7: Schema + Migration Docs** — PR #15 — canonical v2 schema document + migration guide for existing users (dep on all)
+- [x] **Phase 7: Schema + Migration Docs** — PR #15 — canonical v2 schema document + migration guide for existing users (dep on all)
 
 ## Phase Details
 
@@ -95,10 +95,10 @@ Plans:
 **Goal**: Ship the canonical v2 schema document and migration guide for existing users — the definitive reference for every frontmatter field, `_graph/` format, `_meta/` structure, and upgrade path from a v1 vault.
 **Depends on**: All phases (PR #15 deps all — documents what was built)
 **Research**: Unlikely (documentation of existing decisions; no new implementation)
-**Plans**: TBD
+**Plans**: Complete (1 PLAN.md file, 1 SUMMARY.md file — 2026-04-15)
 
 Plans:
-- [ ] 07-01: PR #15 — Canonical v2 schema document (Appendix A skeleton from obsidian-wiki-v2-gsd-cookbook.md) + migration guide; update README, AGENTS.md, CLAUDE.md
+- [x] 07-01: PR #15 — Canonical v2 schema document (Appendix A skeleton from obsidian-wiki-v2-gsd-cookbook.md) + migration guide; update README, AGENTS.md, CLAUDE.md
 
 ## Progress
 
@@ -107,10 +107,10 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Safety | 3/3 | **Complete** | 2026-04-15 |
+| 1. Foundation & Safety | 4/4 | **Complete** | 2026-04-15 |
 | 2. Quality + Graph Foundation | 2/2 | **Complete** | 2026-04-15 |
 | 3. Lifecycle Layer | 3/3 | **Complete** | 2026-04-15 |
 | 4. Graph Traversal + Hybrid Search | 2/2 | **Complete** | 2026-04-15 |
 | 5. Cross-cutting Intelligence | 2/2 | **Complete** | 2026-04-15 |
 | 6. Automation + Collaboration | 2/2 | **Complete** | 2026-04-15 |
-| 7. Schema + Migration Docs | 0/1 | Not started | - |
+| 7. Schema + Migration Docs | 1/1 | **Complete** | 2026-04-15 |
