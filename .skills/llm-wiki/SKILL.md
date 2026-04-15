@@ -149,6 +149,35 @@ The manifest enables:
 - **Audit** — which source produced which wiki page
 - **Staleness detection** — source changed but wiki page hasn't been updated
 
+### `_meta/audit.jsonl`
+
+Append-only audit log. Every vault write operation appends one JSON line here. Never delete or rewrite existing lines. Created automatically on the first write (`_meta/` directory created if needed).
+
+**Entry schema:**
+```json
+{
+  "ts": "2026-04-15T10:30:00.000Z",
+  "op": "ingest",
+  "skill": "wiki-ingest",
+  "page": "concepts/ml-fundamentals.md",
+  "source": "papers/attention-is-all-you-need.pdf",
+  "action": "create",
+  "session": null
+}
+```
+
+| Field | Type | Allowed values | Meaning |
+|---|---|---|---|
+| `ts` | ISO 8601 with ms | — | Wall-clock time of the operation |
+| `op` | string enum | `ingest` \| `update` \| `lint-fix` \| `rebuild` \| `link` \| `tag` \| `delete` | Operation category |
+| `skill` | string | e.g. `"wiki-ingest"`, `"wiki-update"`, `"data-ingest"`, `"wiki-lint"`, etc. | Skill that wrote the entry |
+| `page` | string \| null | vault-relative path | Page modified; `null` for non-page ops |
+| `source` | string \| null | path or identifier | External source that triggered the op; `null` for maintenance ops |
+| `action` | string enum | `create` \| `update` \| `delete` \| `link` \| `fix` \| `tag` | Specific change type |
+| `session` | string \| null | session ID | Reserved for future hook/mesh-sync use; `null` for now |
+
+**Append pattern:** One entry per page per write, appended **after** a successful write (not before). For bulk operations (batch ingest, rebuild), append one entry per page — not one entry for the whole run.
+
 ## Page Template
 
 When creating a new wiki page, use this structure:
@@ -165,6 +194,10 @@ provenance:
   extracted: 0.72
   inferred: 0.25
   ambiguous: 0.03
+confidence: 0.5
+sources_count: 1
+last_confirmed: 2024-03-15T10:30:00Z
+decay_rate: "medium"
 created: 2024-03-15T10:30:00Z
 updated: 2024-03-15T10:30:00Z
 ---
@@ -212,6 +245,17 @@ Example:
 - `^[...]` is footnote-adjacent in Obsidian — renders cleanly and never collides with `[[wikilinks]]`.
 - Inline (suffix) so a single bullet stays a single bullet.
 - Default = extracted means existing pages without markers stay valid.
+
+**Confidence and decay fields** — added to every page created or updated by any ingest skill:
+
+| Field | Type | Meaning | Default |
+|---|---|---|---|
+| `confidence` | float 0.0–1.0 | Reliability estimate. 0.8+ = multiple independent sources agree. 0.5 = single source or inferred. 0.3 = speculative. | `0.5` |
+| `sources_count` | int | Distinct sources that contributed to this page. Increment on each update that adds a new source. | `1` |
+| `last_confirmed` | ISO 8601 | When was this content last reviewed and still deemed accurate? Set to ingest time on create; update on substantive edits. | ingest timestamp |
+| `decay_rate` | `"low"` \| `"medium"` \| `"high"` | How quickly content goes stale. Low = timeless concepts. Medium = tools, APIs, practices. High = versions, pricing, current events. | `"medium"` |
+
+Pages without these fields (existing vaults, pre-v2 pages) are **not retroactively rewritten** — they're treated as `confidence: 0.5`, `decay_rate: "medium"` at read time.
 
 **Frontmatter summary:** Optionally surface the rough mix at the page level so the user can scan for speculation-heavy pages without reading them:
 

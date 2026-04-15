@@ -184,4 +184,17 @@ Append to `log.md`:
 - [TIMESTAMP] LINT issues_found=N orphans=X broken_links=Y stale=Z contradictions=W prov_issues=P missing_summary=S fragmented_clusters=F
 ```
 
+**`_meta/audit.jsonl`** — Only append when a page is **actually modified** (not on report-only runs). For each page auto-fixed:
+```json
+{"ts":"<ISO8601-with-ms>","op":"lint-fix","skill":"wiki-lint","page":"<vault-relative-path>","source":null,"action":"fix","session":null}
+```
+One entry per page that was modified. If wiki-lint runs in report-only mode (no auto-fix), no audit entries.
+
+## Quality Checklist
+
+After linting, verify:
+- [ ] Health report produced with all 8 check categories
+- [ ] `log.md` updated with LINT entry
+- [ ] Audit entries written to `_meta/audit.jsonl` for each page auto-fixed (if in fix mode)
+
 Offer to fix issues automatically or let the user decide which to address.

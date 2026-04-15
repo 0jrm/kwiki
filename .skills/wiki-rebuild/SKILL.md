@@ -114,6 +114,12 @@ Append to `log.md`:
 - [TIMESTAMP] REBUILD archived_to="_archives/2026-04-06T10-30-00Z" previous_pages=87
 ```
 
+**`_meta/audit.jsonl`** — After each page is written during rebuild, append one entry:
+```json
+{"ts":"<ISO8601-with-ms>","op":"rebuild","skill":"wiki-rebuild","page":"<vault-relative-path>","source":null,"action":"create","session":null}
+```
+All rebuild pages use `"action": "create"` since rebuild starts from a cleared vault.
+
 ## Mode 3: Restore from Archive
 
 When the user wants to go back to a previous state.
@@ -160,3 +166,10 @@ Tell the user what was restored and suggest running `wiki-lint` to check for any
 3. **Never delete archives** unless the user explicitly asks. Archives are cheap insurance.
 4. **The `.obsidian/` directory is sacred.** Never touch it during archive/rebuild/restore — it contains the user's Obsidian settings, plugins, and themes.
 5. If something goes wrong mid-rebuild, the archive is there. Tell the user they can restore.
+
+## Quality Checklist
+
+After rebuilding, verify:
+- [ ] Archive exists at `_archives/<timestamp>/` with `archive-meta.json`
+- [ ] `log.md` updated with REBUILD entry
+- [ ] Audit entries written to `_meta/audit.jsonl` for each page written during rebuild

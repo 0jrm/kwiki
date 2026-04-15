@@ -179,3 +179,16 @@ Or for normalization:
 ```
 - [TIMESTAMP] TAG_NORMALIZE tags_renamed=N pages_modified=M new_tags_added=P
 ```
+
+**`_meta/audit.jsonl`** — For normalization runs only (not audit-only runs), after each page's frontmatter is rewritten, append one entry:
+```json
+{"ts":"<ISO8601-with-ms>","op":"tag","skill":"tag-taxonomy","page":"<vault-relative-path>","source":null,"action":"tag","session":null}
+```
+One entry per page modified. Audit-only (Mode 1) runs produce no audit entries — no pages were written.
+
+## Quality Checklist
+
+After tag operations, verify:
+- [ ] Tag report produced or normalization completed
+- [ ] `log.md` updated with TAG_AUDIT or TAG_NORMALIZE entry
+- [ ] Audit entries written to `_meta/audit.jsonl` for each page modified (normalization mode only)

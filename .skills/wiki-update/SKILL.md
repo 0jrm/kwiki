@@ -111,6 +111,10 @@ provenance:
   extracted: 0.6
   inferred: 0.35
   ambiguous: 0.05
+confidence: 0.8
+sources_count: 1
+last_confirmed: TIMESTAMP
+decay_rate: "medium"
 created: TIMESTAMP
 updated: TIMESTAMP
 ---
@@ -127,6 +131,12 @@ Use [[wikilinks]] to connect to other pages.
 ```
 
 **Write a `summary:` frontmatter field** on every new/updated page (1–2 sentences, ≤200 chars), using `>-` folded style. For project sync, a good summary answers "what does this page tell me about the project I wouldn't guess from its title?" This field powers cheap retrieval by `wiki-query`.
+
+**Set confidence + decay fields** on every new/updated project page:
+- `confidence`: default `0.8` for project pages synced from a live codebase you're actively working in. Lower if the page is heavily inferred or the project is exploratory.
+- `sources_count`: count of commit ranges or referenced files contributing to this page. Start at `1`; increment when multiple sources contributed in this session.
+- `last_confirmed`: set to current sync time.
+- `decay_rate`: `"medium"` for most project pages. Use `"high"` if the page documents versions, dependencies, or current team structure.
 
 **Apply provenance markers** per `llm-wiki` (Provenance Markers section). For project sync specifically:
 
@@ -179,6 +189,24 @@ Append:
 ```
 - [TIMESTAMP] WIKI_UPDATE project=<project-name> pages_updated=X pages_created=Y source_cwd=/path/to/project
 ```
+
+### Append to `_meta/audit.jsonl`
+
+After writing the project page, append one entry per page written:
+```json
+{"ts":"<ISO8601-with-ms>","op":"update","skill":"wiki-update","page":"<vault-relative-path>","source":"<cwd-of-project>","action":"create","session":null}
+```
+Use `"action": "update"` if the page already existed. Create `_meta/` directory first if it doesn't exist.
+
+## Quality Checklist
+
+After syncing, verify:
+- [ ] Project page exists at `projects/<project-name>/<project-name>.md`
+- [ ] `index.md` and `log.md` updated
+- [ ] `.manifest.json` updated with `last_commit_synced`
+- [ ] Every new/updated page has a `summary:` frontmatter field (≤200 chars)
+- [ ] Project page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields
+- [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
 ## Tips
 

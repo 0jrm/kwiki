@@ -32,6 +32,29 @@ Source documents (PDFs, text files, web clippings, images, `_raw/` drafts) are *
 
 This applies to all ingest modes and all source formats.
 
+## PII Filter
+
+Before writing any content to a vault page, scan the source text for sensitive patterns. This runs on raw source content, not on already-written vault pages.
+
+**Always redact (context-independent):**
+- OpenAI/Anthropic keys: `sk-[A-Za-z0-9]{20,}` → `[REDACTED:api-key]`
+- GitHub tokens: `ghp_[A-Za-z0-9]{36}` or `ghs_[A-Za-z0-9]{36}` → `[REDACTED:github-token]`
+- AWS access keys: `AKIA[A-Z0-9]{16}` → `[REDACTED:aws-key]`
+- Slack tokens: `xoxb-[A-Za-z0-9-]+` or `xoxp-[A-Za-z0-9-]+` → `[REDACTED:slack-token]`
+- Bearer tokens in headers: `Bearer [A-Za-z0-9._\-]{20,}` → `[REDACTED:bearer-token]`
+- Private key blocks: `-----BEGIN ... PRIVATE KEY-----` through `-----END ... PRIVATE KEY-----` → `[REDACTED:private-key]`
+- JWT tokens: strings matching `eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+` → `[REDACTED:jwt-token]`
+
+**Redact in credential context** (inside `.env` files, config blocks, JSON auth responses):
+- Email addresses found alongside API credentials or auth config → `[REDACTED:email]`
+
+**Never redact:**
+- Email addresses that are the subject of knowledge distillation (e.g. a page about email deliverability can contain example addresses)
+- Hashes, IDs, or opaque strings that are not in a credential-looking context
+- Content already labeled `[REDACTED:*]` from a prior pass
+
+**On detection:** Replace the matched text inline with `[REDACTED:pattern-name]`. Append a warning to the ingest summary: `"PII filter: redacted N occurrences (pattern-name, ...)"` — but do **not** abort the ingest. Redact and continue.
+
 ## Ingest Modes
 
 This skill supports three modes. Ask the user or infer from context:
@@ -186,6 +209,22 @@ For each page in your plan:
 - Extracted claims need no marker
 - After writing the page, count rough fractions and write them to a `provenance:` frontmatter block (extracted/inferred/ambiguous summing to ~1.0). When updating an existing page, recompute and update the block.
 
+**Confidence + decay fields (set on every new page; update when revisiting):**
+- `confidence`: float 0.0–1.0. Estimate from source quality × cross-reference density. Use 0.8+ only when multiple independent primary sources agree. Use 0.3–0.5 for single-source or heavily inferred content. Default: `0.5`.
+- `sources_count`: integer count of distinct source files/URLs that contributed to this page. Increment when updating with new sources.
+- `last_confirmed`: ISO 8601 timestamp. Set to current time on create and on any substantive update.
+- `decay_rate`: one of `"low"` | `"medium"` | `"high"`. Low = definitions, math, stable patterns. Medium = tools, APIs, practices. High = versions, pricing, current events, personnel. Default: `"medium"`.
+
+Example frontmatter with confidence fields:
+```yaml
+confidence: 0.7
+sources_count: 2
+last_confirmed: 2026-04-15T10:30:00Z
+decay_rate: "medium"
+```
+
+On update: increment `sources_count` if a new source is being added, set `last_confirmed` to now, and reconsider `confidence` in light of the new evidence. Do NOT retroactively rewrite existing pages that lack these fields — only pages being actively created or updated get them.
+
 ### Step 6: Update Cross-References
 
 After writing pages, check that wikilinks work in both directions. If page A links to page B, consider whether page B should also link back to page A.
@@ -218,6 +257,12 @@ If the manifest doesn't exist yet, create it with `version: 1`.
 - [TIMESTAMP] INGEST source="path/to/source" pages_updated=N pages_created=M mode=append|full
 ```
 
+**`_meta/audit.jsonl`** — After each page write, append one entry (create `_meta/` first if it doesn't exist):
+```json
+{"ts":"<ISO8601-with-ms>","op":"ingest","skill":"wiki-ingest","page":"<vault-relative-path>","source":"<source-path>","action":"create","session":null}
+```
+Use `"action": "update"` if the page already existed. One entry per page, appended after the write succeeds.
+
 ## Handling Multiple Sources
 
 When ingesting a directory, process sources one at a time but maintain a running awareness of the full batch. Later sources may strengthen or contradict earlier ones — that's fine, just update pages as you go.
@@ -233,6 +278,9 @@ After ingesting, verify:
 - [ ] Source attribution is present for every new claim
 - [ ] Inferred and ambiguous claims are marked with `^[inferred]` / `^[ambiguous]`; `provenance:` frontmatter block is present on new and updated pages
 - [ ] Every new/updated page has a `summary:` frontmatter field (1–2 sentences, ≤200 chars)
+- [ ] New page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` frontmatter fields
+- [ ] PII filter ran on source content; any redactions noted in summary
+- [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
 ## Reference
 

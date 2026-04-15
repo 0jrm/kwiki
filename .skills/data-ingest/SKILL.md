@@ -21,6 +21,29 @@ You are ingesting arbitrary text data into an Obsidian wiki. The source could be
 
 If the source path is already in `.manifest.json` and the file hasn't been modified since `ingested_at`, tell the user it's already been ingested. Ask if they want to re-ingest anyway.
 
+## PII Filter
+
+Apply this filter to all raw source text before extracting knowledge, regardless of format. Data exports, chat logs, and CSV dumps are particularly high-risk — they often contain credentials from API integrations or copied `.env` values.
+
+**Always redact (context-independent):**
+- OpenAI/Anthropic keys: `sk-[A-Za-z0-9]{20,}` → `[REDACTED:api-key]`
+- GitHub tokens: `ghp_[A-Za-z0-9]{36}` or `ghs_[A-Za-z0-9]{36}` → `[REDACTED:github-token]`
+- AWS access keys: `AKIA[A-Z0-9]{16}` → `[REDACTED:aws-key]`
+- Slack tokens: `xoxb-[A-Za-z0-9-]+` or `xoxp-[A-Za-z0-9-]+` → `[REDACTED:slack-token]`
+- Bearer tokens in headers: `Bearer [A-Za-z0-9._\-]{20,}` → `[REDACTED:bearer-token]`
+- Private key blocks: `-----BEGIN ... PRIVATE KEY-----` through `-----END ... PRIVATE KEY-----` → `[REDACTED:private-key]`
+- JWT tokens: strings matching `eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+` → `[REDACTED:jwt-token]`
+
+**Redact in credential context** (inside `.env` files, config blocks, JSON auth responses):
+- Email addresses found alongside API credentials or auth config → `[REDACTED:email]`
+
+**Never redact:**
+- Email addresses that are the subject of knowledge distillation (e.g. a page about email deliverability can contain example addresses)
+- Hashes, IDs, or opaque strings that are not in a credential-looking context
+- Content already labeled `[REDACTED:*]` from a prior pass
+
+**On detection:** Replace the matched text inline with `[REDACTED:pattern-name]`. Append a warning to the ingest summary: `"PII filter: redacted N occurrences (pattern-name, ...)"` — but do **not** abort the ingest. Redact and continue.
+
 ## Step 1: Identify the Source Format
 
 Read the file(s) the user points you at. Common formats you'll encounter:
@@ -127,6 +150,21 @@ Follow the `wiki-ingest` skill's process for creating/updating pages:
 ```
 - [TIMESTAMP] DATA_INGEST source="path/to/data" format=FORMAT pages_updated=X pages_created=Y
 ```
+
+**`_meta/audit.jsonl`** — After each page write (one entry per page, inside any write loop):
+```json
+{"ts":"<ISO8601-with-ms>","op":"ingest","skill":"data-ingest","page":"<vault-relative-path>","source":"<source-path>","action":"create","session":null}
+```
+Use `"action": "update"` if the page already existed. Create `_meta/` directory first if it doesn't exist.
+
+## Quality Checklist
+
+After ingesting, verify:
+- [ ] Every new page has frontmatter with title, category, tags, sources
+- [ ] `index.md` and `log.md` updated
+- [ ] Source attribution present for every claim
+- [ ] PII filter ran on source content; any redactions noted in summary
+- [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
 ## Tips
 

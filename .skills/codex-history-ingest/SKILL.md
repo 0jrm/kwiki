@@ -20,6 +20,29 @@ This skill can be invoked directly or via the `wiki-history-ingest` router (`/wi
 2. Read `.manifest.json` at the vault root to check what has already been ingested
 3. Read `index.md` at the vault root to understand what the wiki already contains
 
+## PII Filter
+
+Codex rollout logs can include injected tool payloads, `.env` file contents, and credentials pasted during sessions. Apply this filter to all source text before extracting knowledge.
+
+**Always redact (context-independent):**
+- OpenAI/Anthropic keys: `sk-[A-Za-z0-9]{20,}` → `[REDACTED:api-key]`
+- GitHub tokens: `ghp_[A-Za-z0-9]{36}` or `ghs_[A-Za-z0-9]{36}` → `[REDACTED:github-token]`
+- AWS access keys: `AKIA[A-Z0-9]{16}` → `[REDACTED:aws-key]`
+- Slack tokens: `xoxb-[A-Za-z0-9-]+` or `xoxp-[A-Za-z0-9-]+` → `[REDACTED:slack-token]`
+- Bearer tokens in headers: `Bearer [A-Za-z0-9._\-]{20,}` → `[REDACTED:bearer-token]`
+- Private key blocks: `-----BEGIN ... PRIVATE KEY-----` through `-----END ... PRIVATE KEY-----` → `[REDACTED:private-key]`
+- JWT tokens: strings matching `eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+` → `[REDACTED:jwt-token]`
+
+**Redact in credential context** (inside `.env` files, config blocks, JSON auth responses):
+- Email addresses found alongside API credentials or auth config → `[REDACTED:email]`
+
+**Never redact:**
+- Email addresses that are the subject of knowledge distillation (e.g. a page about email deliverability can contain example addresses)
+- Hashes, IDs, or opaque strings that are not in a credential-looking context
+- Content already labeled `[REDACTED:*]` from a prior pass
+
+**On detection:** Replace the matched text inline with `[REDACTED:pattern-name]`. Append a warning to the ingest summary: `"PII filter: redacted N occurrences (pattern-name, ...)"` — but do **not** abort the ingest. Redact and continue.
+
 ## Ingest Modes
 
 ### Append Mode (default)
@@ -189,10 +212,25 @@ Update `index.md` and `log.md`:
 - [TIMESTAMP] CODEX_HISTORY_INGEST sessions=N pages_updated=X pages_created=Y mode=append|full
 ```
 
+**`_meta/audit.jsonl`** — After each page write, append one entry (create `_meta/` if needed):
+```json
+{"ts":"<ISO8601-with-ms>","op":"ingest","skill":"codex-history-ingest","page":"<vault-relative-path>","source":"<rollout-file-or-session-id>","action":"create","session":null}
+```
+Use `"action": "update"` if the page already existed. One entry per page, appended after the write succeeds.
+
+## Quality Checklist
+
+After ingesting, verify:
+- [ ] Every new page has frontmatter with title, category, tags, sources
+- [ ] `index.md`, `log.md`, and `.manifest.json` updated
+- [ ] Provenance markers applied; `provenance:` block on each page
+- [ ] PII filter ran on source content; any redactions noted in summary
+- [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
+
 ## Privacy and Compliance
 
 - Distill and synthesize; avoid raw transcript dumps
-- Default to redaction for anything that looks sensitive
+- Default to redaction for anything that looks sensitive (the PII filter catches structured patterns; use judgment for unstructured sensitive content)
 - Ask the user before storing personal/sensitive details
 - Keep references to other people minimal and purpose-bound
 

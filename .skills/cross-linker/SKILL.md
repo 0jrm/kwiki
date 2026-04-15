@@ -156,6 +156,19 @@ Append to `log.md`:
 - [TIMESTAMP] CROSS_LINK pages_scanned=N links_added=M pages_modified=P orphans_remaining=Q
 ```
 
+**`_meta/audit.jsonl`** — After each page that receives new links is written, append one entry:
+```json
+{"ts":"<ISO8601-with-ms>","op":"link","skill":"cross-linker","page":"<vault-relative-path>","source":null,"action":"link","session":null}
+```
+One entry per page modified (not one per link added).
+
+## Quality Checklist
+
+After cross-linking, verify:
+- [ ] Cross-Link Report produced with links added and orphans remaining
+- [ ] `log.md` updated with CROSS_LINK entry
+- [ ] Audit entries written to `_meta/audit.jsonl` for each page modified
+
 ## Tips
 
 - **Run after every ingest.** New pages are almost always poorly connected. This is the fix.
