@@ -16,7 +16,7 @@ None
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Safety** — PRs #1 ★ #11 ★ #12 ★ — confidence frontmatter, PII filter, audit log (all dep-free; foundation for everything)
+- [x] **Phase 1: Foundation & Safety** — PRs #1 ★ #11 ★ #12 ★ — confidence frontmatter, PII filter, audit log (all dep-free; foundation for everything)
 - [ ] **Phase 2: Quality + Graph Foundation** — PRs #5 ★ #8 ★ — typed entity/relationship extraction + quality scoring + self-healing lint (completes MVP-5)
 - [ ] **Phase 3: Lifecycle Layer** — PRs #2 #3 #4 — supersession, retention decay, consolidation tiers (all dep on #1)
 - [ ] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 Plans:
-- [ ] 01-01: PR #1 — Add `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields to wiki-ingest and wiki-update; backward compat defaults
-- [ ] 01-02: PR #11 — Ingest-time PII filter (API keys, tokens, emails) in wiki-ingest and data-ingest before any write
-- [ ] 01-03: PR #12 — Append-only `_meta/audit.jsonl` for every wiki operation; update all write-path skills
+- [x] 01-01: PR #1 — Add `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields to wiki-ingest and wiki-update; backward compat defaults
+- [x] 01-02: PR #11 — Ingest-time PII filter (API keys, tokens, emails) in wiki-ingest and data-ingest before any write
+- [x] 01-03: PR #12 — Append-only `_meta/audit.jsonl` for every wiki operation; update all write-path skills
 
 ### Phase 2: Quality + Graph Foundation
 **Goal**: Complete the MVP-5 subset with typed entity/relationship extraction (#5) and quality scoring + self-healing lint (#8). After this phase the vault has a typed graph (`_graph/entities.jsonl`, `_graph/edges.jsonl`) and pages auto-score themselves — the foundation for contradiction detection, hybrid search, and mesh sync later.
@@ -106,7 +106,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Safety | 0/3 | Not started | - |
+| 1. Foundation & Safety | 3/3 | **Complete** | 2026-04-15 |
 | 2. Quality + Graph Foundation | 0/2 | Not started | - |
 | 3. Lifecycle Layer | 0/3 | Not started | - |
 | 4. Graph Traversal + Hybrid Search | 0/2 | Not started | - |
