@@ -215,19 +215,33 @@ For each page in your plan:
 - `last_confirmed`: ISO 8601 timestamp. Set to current time on create and on any substantive update.
 - `decay_rate`: one of `"low"` | `"medium"` | `"high"`. Low = definitions, math, stable patterns. Medium = tools, APIs, practices. High = versions, pricing, current events, personnel. Default: `"medium"`.
 
-Example frontmatter with confidence fields:
+Example frontmatter with confidence and graph fields:
 ```yaml
 confidence: 0.7
 sources_count: 2
 last_confirmed: 2026-04-15T10:30:00Z
 decay_rate: "medium"
+entities: [person:sarah-chen, project:kwiki, library:rank-bm25]
 ```
+
+**`entities`**: list of graph entity IDs present on this page (format `{type}:{slug}`). Populated automatically by `entity-extract` after the page is written. Default `[]` for pages created before the graph layer. Do NOT retroactively populate on pages not being touched this ingest.
 
 On update: increment `sources_count` if a new source is being added, set `last_confirmed` to now, and reconsider `confidence` in light of the new evidence. Do NOT retroactively rewrite existing pages that lack these fields — only pages being actively created or updated get them.
 
 ### Step 6: Update Cross-References
 
 After writing pages, check that wikilinks work in both directions. If page A links to page B, consider whether page B should also link back to page A.
+
+### Step 6b: Extract Entities and Relationships
+
+After cross-linking, invoke the `entity-extract` skill on each newly written or updated page:
+
+1. Run `entity-extract` on the page content + frontmatter
+2. It returns a list of entity IDs found on this page
+3. Update the page's `entities:` frontmatter with this list (replace, not append)
+4. `entity-extract` has already written to `_graph/entities.jsonl` and `_graph/edges.jsonl`
+
+If `_graph/` doesn't exist yet, `entity-extract` creates it on first invocation — no action needed from wiki-ingest.
 
 ### Step 7: Update Manifest and Special Files
 
@@ -279,6 +293,8 @@ After ingesting, verify:
 - [ ] Inferred and ambiguous claims are marked with `^[inferred]` / `^[ambiguous]`; `provenance:` frontmatter block is present on new and updated pages
 - [ ] Every new/updated page has a `summary:` frontmatter field (1–2 sentences, ≤200 chars)
 - [ ] New page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` frontmatter fields
+- [ ] `entities:` frontmatter field is populated on every new/updated page (via entity-extract Step 6b)
+- [ ] `_graph/entities.jsonl` and `_graph/edges.jsonl` have fresh rows for this ingest
 - [ ] PII filter ran on source content; any redactions noted in summary
 - [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
