@@ -115,6 +115,8 @@ confidence: 0.8
 sources_count: 1
 last_confirmed: TIMESTAMP
 decay_rate: "medium"
+entities: []
+quality: 0.85
 created: TIMESTAMP
 updated: TIMESTAMP
 ---
@@ -198,6 +200,14 @@ After writing the project page, append one entry per page written:
 ```
 Use `"action": "update"` if the page already existed. Create `_meta/` directory first if it doesn't exist.
 
+## Quality Scoring
+
+Every new or updated project page gets a `quality:` frontmatter field. Compute it using the same seven-signal heuristic defined in `wiki-ingest/SKILL.md` Step 5a. For project pages synced from an active codebase:
+
+- Pages with a full README, multiple wikilinks, entities, and a good summary typically score ≥ 0.75.
+- Use `quality: 0.85` as the example in the template (project pages tend to be well-sourced).
+- Compute the actual value at write time; don't hardcode the example value.
+
 ## Quality Checklist
 
 After syncing, verify:
@@ -206,6 +216,7 @@ After syncing, verify:
 - [ ] `.manifest.json` updated with `last_commit_synced`
 - [ ] Every new/updated page has a `summary:` frontmatter field (≤200 chars)
 - [ ] Project page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields
+- [ ] Project page has a `quality:` frontmatter field computed via the wiki-ingest heuristic
 - [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
 ## Tips

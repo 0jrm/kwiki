@@ -215,18 +215,39 @@ For each page in your plan:
 - `last_confirmed`: ISO 8601 timestamp. Set to current time on create and on any substantive update.
 - `decay_rate`: one of `"low"` | `"medium"` | `"high"`. Low = definitions, math, stable patterns. Medium = tools, APIs, practices. High = versions, pricing, current events, personnel. Default: `"medium"`.
 
-Example frontmatter with confidence and graph fields:
+Example frontmatter with confidence, graph, and quality fields:
 ```yaml
 confidence: 0.7
 sources_count: 2
 last_confirmed: 2026-04-15T10:30:00Z
 decay_rate: "medium"
 entities: [person:sarah-chen, project:kwiki, library:rank-bm25]
+quality: 0.72
 ```
 
 **`entities`**: list of graph entity IDs present on this page (format `{type}:{slug}`). Populated automatically by `entity-extract` after the page is written. Default `[]` for pages created before the graph layer. Do NOT retroactively populate on pages not being touched this ingest.
 
+**`quality`**: float 0.0–1.0, computed by Step 5a from seven weighted signals. Populated on every new/updated page. Default: computed at write time; pages without it get a fresh score on next lint run.
+
 On update: increment `sources_count` if a new source is being added, set `last_confirmed` to now, and reconsider `confidence` in light of the new evidence. Do NOT retroactively rewrite existing pages that lack these fields — only pages being actively created or updated get them.
+
+### Step 5a: Compute Quality Score
+
+After writing the page (or as the final frontmatter field before saving), compute the `quality:` score from seven weighted signals. Sum the contributions and round to 2 decimal places.
+
+| Signal | Weight | Scoring rule |
+|---|---|---|
+| `confidence` present + ≥ 0.7 | 0.25 | Full if `confidence ≥ 0.7`; half (0.125) if present and `< 0.7`; 0 if absent |
+| `sources_count` ≥ 2 | 0.15 | Full if `≥ 2`; half (0.075) if `= 1`; 0 if absent/0 |
+| `summary:` present (≥ 20 chars) | 0.10 | Full if present and ≥ 20 chars; 0 otherwise |
+| Wikilink count ≥ 3 | 0.20 | Full if `≥ 3` wikilinks in body; half (0.10) if 1–2; 0 if none |
+| `entities:` count ≥ 2 | 0.15 | Full if `≥ 2` entity IDs; half (0.075) if `= 1`; 0 if absent/empty |
+| Body length ≥ 200 chars | 0.10 | Full if `≥ 200` chars; half (0.05) if 50–199; 0 if `< 50` |
+| `last_confirmed` within 90 days | 0.05 | Full if confirmed within 90 days of now; 0 otherwise |
+
+**Maximum score:** 1.0 (all signals at full). **Minimum:** 0.0.
+
+Write the computed value to the page's `quality:` frontmatter. Pages scoring < 0.4 are flagged "low quality" by `wiki-lint` — no auto-fix (quality is a signal, not a blocker).
 
 ### Step 6: Update Cross-References
 
@@ -295,6 +316,8 @@ After ingesting, verify:
 - [ ] New page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` frontmatter fields
 - [ ] `entities:` frontmatter field is populated on every new/updated page (via entity-extract Step 6b)
 - [ ] `_graph/entities.jsonl` and `_graph/edges.jsonl` have fresh rows for this ingest
+- [ ] Page has a `quality:` frontmatter field computed by the Step 5a heuristic
+- [ ] Quality score is in `[0.0, 1.0]` with 2 decimals
 - [ ] PII filter ran on source content; any redactions noted in summary
 - [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
 
