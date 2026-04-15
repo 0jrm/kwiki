@@ -37,6 +37,17 @@ In filtered mode, note the filter in the Step 6 log entry: `mode=filtered`.
 
 **Follow the Retrieval Primitives table in `llm-wiki/SKILL.md`.** Reading is the dominant cost of this skill — use the cheapest primitive that answers the question and escalate only when it can't. Never jump straight to full-page reads.
 
+`wiki-query` now uses a **hybrid retrieval stack**:
+- BM25 lexical ranking (always on)
+- graph traversal ranking from `_graph/entities.jsonl` + `_graph/edges.jsonl` (when present)
+- vector ranking via QMD (only when `QMD_WIKI_COLLECTION` is configured and query succeeds)
+
+Fusion uses **Reciprocal Rank Fusion (RRF)** with default `k = 60`:
+
+`RRF(d) = Σ_i 1 / (k + rank_i(d))`
+
+Where each retriever `i` contributes a rank position for candidate `d`.
+
 ### Step 1: Understand the Question
 
 Classify the query type:
@@ -63,13 +74,49 @@ Build a candidate set *without opening any page bodies*:
 
 If you're in **index-only mode**, stop here. Answer from `summary:` fields, titles, and `index.md` descriptions only. Label the answer clearly: **"(index-only answer — page bodies not read; facts below are from page summaries and may miss nuance)"**. Then skip to Step 5.
 
-### Step 2b: QMD Semantic Pass (optional — requires `QMD_WIKI_COLLECTION` in `.env`)
+### Step 2b: Candidate Stream Generation (hybrid input stage)
+
+Build up to three ranked candidate streams in parallel. Each stream should return **at most 20 candidates**.
+
+#### Stream A: BM25 lexical (required)
+
+- Build a document set from candidate pages discovered in Step 2 (expand with additional title/tag hits as needed).
+- Rank with BM25 over body text and high-signal frontmatter (`title`, `summary`, `tags`).
+- Keep top 20 as `bm25_ranked`.
+
+#### Stream B: Graph traversal (optional, fallback-safe)
+
+**GUARD:** If `_graph/entities.jsonl` or `_graph/edges.jsonl` is missing, unreadable, or empty, skip this stream with no hard failure.
+
+When graph data exists:
+1. Build seed pages from strong Step 2/BM25 matches.
+2. Resolve seed pages to entity IDs from page frontmatter `entities:`. If missing, treat as `[]`.
+3. Optionally backfill seed entities by matching page titles/aliases against `_graph/entities.jsonl` names.
+4. Traverse `_graph/edges.jsonl` with bounded walk:
+   - default depth: **1 hop**
+   - depth **2 hops** only when user explicitly asks ("deep", "expand graph", "broaden context")
+5. Use edge-type weights:
+   - `depends_on`, `uses`, `fixed`: `1.0`
+   - `supersedes`: `0.8` (prefer forward direction)
+   - `related_to`, `mentions`, `owned_by`: `0.7`
+   - `contradicts`: `0.6` (include with caution)
+6. Apply hop decay multiplier `0.75^hop`.
+7. Maintain a visited set to prevent loops and duplicate expansion.
+8. Convert expanded entities back to candidate pages via matching `entities:` frontmatter.
+
+Provenance labels for graph-derived candidates:
+- `graph-1hop`
+- `graph-2hop`
+
+If a candidate path includes a `contradicts` edge anywhere, add a caution label (`graph-contradiction-path`) and lower tie-break priority.
+
+#### Stream C: Vector (optional — requires `QMD_WIKI_COLLECTION` in `.env`)
 
 **GUARD: If `$QMD_WIKI_COLLECTION` is empty or unset, skip this entire step and proceed to Step 3.**
 
 > **No QMD?** Skip to Step 3 and use `Grep` directly on the vault. QMD is faster and concept-aware but the grep path is fully functional. See `.env.example` for setup.
 
-If `QMD_WIKI_COLLECTION` is set and the index pass didn't produce clear candidates — or the question requires semantic matching rather than exact terms — use QMD before reaching for `Grep`:
+If `QMD_WIKI_COLLECTION` is set and the index pass didn't produce clear candidates — or the question requires semantic matching rather than exact terms — use QMD to build a vector-ranked stream:
 
 ```
 mcp__qmd__query:
@@ -82,13 +129,33 @@ mcp__qmd__query:
       query: <question rephrased as a description>
 ```
 
-The returned snippets act as pre-read section summaries. If they answer the question fully, skip Step 3 and go straight to Step 4 (reading only the pages QMD ranked highest). If not, use the ranked file list to guide which files to grep or read in Step 3.
+The returned snippets act as pre-read section summaries. Keep top 20 as `vector_ranked`.
 
 **Also search `papers` when the question may have source material in `_raw/`:**
 
 If `QMD_PAPERS_COLLECTION` is set and the user is asking about a topic likely covered by ingested papers (research, theory, background), run a parallel search against the papers collection. Cite raw sources separately from compiled wiki pages in your answer.
 
-### Step 3: Section Pass (medium cost — only if Steps 2/2b are inconclusive)
+### Step 2c: Fusion + fallback logic
+
+Combine available streams with RRF (`k=60`) and produce a final ranked list.
+
+Fallback behavior is mandatory:
+- If vector stream is unavailable/fails: fuse BM25 + graph
+- If graph stream is unavailable/fails: fuse BM25 + vector (if vector exists)
+- If both optional streams unavailable/fail: BM25-only
+- Any single stream failure must degrade gracefully and never abort query execution
+
+Fusion output:
+- top **10** pages before synthesis
+- each result carries:
+  - `fused_score`
+  - `streams_used` (e.g., `bm25,graph`)
+  - per-stream rank contributions (e.g., `bm25:3, graph:7, vector:2`)
+  - provenance (`direct-match`, `graph-1hop`, `graph-2hop`)
+
+Safety rule: graph/vector expansion adds context, but strong direct lexical matches should win normal tie-breaks.
+
+### Step 3: Section Pass (medium cost — only if Steps 2/2b/2c are inconclusive)
 
 For each of the top candidates, pull the relevant section *without reading the whole page*:
 
@@ -113,6 +180,15 @@ Compose your answer from wiki content:
 - If the wiki has contradictions, present both sides
 - If the wiki doesn't cover something, say so explicitly
 - Suggest which sources might fill the gap
+- When graph evidence contributed, include provenance labels inline for key claims (for example: "from `graph-1hop` via `depends_on`")
+
+### Step 5b: Optional explain mode (`--explain`)
+
+If the user asks for `--explain`, include retrieval diagnostics:
+- stream availability (`bm25`, `graph`, `vector`)
+- skipped streams and reason (unset env var, missing `_graph`, backend error)
+- per-result rank table (`bm25`, `graph`, `vector`, `fused_score`)
+- graph traversal metadata (`depth`, edge types used, contradiction-path flags)
 
 ### Step 6: Log the Query
 
@@ -132,3 +208,12 @@ Structure answers like this:
 > **Pages consulted:** [[page-a]], [[page-b]], [[page-c]]
 >
 > **Gaps:** [What the wiki doesn't cover that might be relevant]
+
+## Retrieval Checklist
+
+- [ ] RRF formula and default `k = 60` are explicit in query flow
+- [ ] Query works with and without `_graph/` files
+- [ ] 2-stream fallback (BM25 + graph) is explicit when vector is unavailable
+- [ ] Any stream failure degrades gracefully; query still returns results
+- [ ] Traversal depth, edge weights, and hop decay are explicit
+- [ ] Graph-derived snippets/results are provenance-labeled in output

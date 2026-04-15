@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Safety** — PRs #1 ★ #11 ★ #12 ★ — confidence frontmatter, PII filter, audit log (all dep-free; foundation for everything)
 - [x] **Phase 2: Quality + Graph Foundation** — PRs #5 ★ #8 ★ — typed entity/relationship extraction + quality scoring + self-healing lint (completes MVP-5)
 - [x] **Phase 3: Lifecycle Layer** — PRs #2 #3 #4 — supersession, retention decay, consolidation tiers (all dep on #1)
-- [ ] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
+- [x] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
 - [ ] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
 - [ ] **Phase 6: Automation + Collaboration** — PRs #13 #14 — event hooks + multi-agent mesh sync (dep on most above)
 - [ ] **Phase 7: Schema + Migration Docs** — PR #15 — canonical v2 schema document + migration guide for existing users (dep on all)
@@ -64,11 +64,11 @@ Plans:
 **Depends on**: Phase 2 (#6 deps on #5; #7 deps on #5 and #6)
 **Research**: Likely (RRF fusion algorithm and BM25 scoring details; QMD integration if `QMD_WIKI_COLLECTION` set; how to fall back gracefully to 2-stream when no vector backend)
 **Research topics**: Reciprocal rank fusion implementation details; BM25 scoring for markdown document sets; QMD collection query API; safe fallback path when `QMD_WIKI_COLLECTION` is unset
-**Plans**: TBD
+**Plans**: Complete (2 PLAN.md files — 2026-04-15)
 
 Plans:
-- [ ] 04-01: PR #6 — Graph traversal in wiki-query; walk `edges.jsonl` to expand query context with related entities
-- [ ] 04-02: PR #7 — Hybrid search: BM25 + vector (QMD if set) + graph scores fused with RRF; 2-stream fallback guaranteed
+- [x] 04-01: PR #6 — Graph traversal in wiki-query; walk `edges.jsonl` to expand query context with related entities
+- [x] 04-02: PR #7 — Hybrid search: BM25 + vector (QMD if set) + graph scores fused with RRF; 2-stream fallback guaranteed
 
 ### Phase 5: Cross-cutting Intelligence
 **Goal**: Higher-order reasoning over the vault — contradiction detection checks new claims against existing ones (#9) and proposes resolution; crystallization (#10) distills multi-session threads into structured digests.
@@ -110,7 +110,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. Foundation & Safety | 3/3 | **Complete** | 2026-04-15 |
 | 2. Quality + Graph Foundation | 2/2 | **Complete** | 2026-04-15 |
 | 3. Lifecycle Layer | 3/3 | **Complete** | 2026-04-15 |
-| 4. Graph Traversal + Hybrid Search | 0/2 | Not started | - |
+| 4. Graph Traversal + Hybrid Search | 2/2 | **Complete** | 2026-04-15 |
 | 5. Cross-cutting Intelligence | 0/2 | Not started | - |
 | 6. Automation + Collaboration | 0/2 | Not started | - |
 | 7. Schema + Migration Docs | 0/1 | Not started | - |

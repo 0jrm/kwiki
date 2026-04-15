@@ -334,6 +334,26 @@ The `entity-extract` skill populates these files; pages without the `entities:` 
 **Edge types (fixed vocabulary):** `uses`, `depends_on`, `contradicts`, `caused`, `fixed`, `supersedes`, `mentions`, `owned_by`, `related_to`.  
 **Edge confidence ladder:** 0.6 (1 source) → 0.8 (2) → 0.9 (3+).
 
+#### Query-time graph traversal semantics (`wiki-query`)
+
+Graph data is not just ingest metadata; it is a retrieval signal.
+
+- **Seed set:** Start from direct lexical candidates (title/tag/summary/BM25 hits), then resolve their `entities:` IDs.
+- **Depth:** default 1 hop; allow 2 hops only on explicit user request (`deep`, `expand graph`).
+- **Edge weights:**
+  - `depends_on`, `uses`, `fixed`: `1.0`
+  - `supersedes`: `0.8` (prefer forward traversal)
+  - `related_to`, `mentions`, `owned_by`: `0.7`
+  - `contradicts`: `0.6` (include, but caution-label)
+- **Hop decay:** multiply score contribution by `0.75` per hop.
+- **Guardrails:** visited-set required; graph expansion supplements direct matches and should not displace strong direct evidence by default.
+
+Worked example:
+- Query: "How do we handle stale confidence?"
+- Direct match: `[[skills/wiki-lint]]` (contains decay policy)
+- Graph hop: `wiki-lint` page links entity `concept:retention-decay`, edge `depends_on` to `concept:confidence-scoring`
+- Returned connected page: `[[concepts/confidence-scoring]]` labeled `graph-1hop` with `depends_on`
+
 **Frontmatter summary:** Optionally surface the rough mix at the page level so the user can scan for speculation-heavy pages without reading them:
 
 ```yaml
@@ -385,8 +405,22 @@ The wiki is configured through environment variables (see `.env.example`). The o
 - `OBSIDIAN_SOURCES_DIR` — Where raw source documents are
 - `OBSIDIAN_CATEGORIES` — Comma-separated list of categories
 - `CLAUDE_HISTORY_PATH` — Where to find Claude conversation data
+- `QMD_WIKI_COLLECTION` — Optional vector stream for `wiki-query` hybrid retrieval (unset = no vector stream)
 
 No API keys are needed — the agent running these skills already has LLM access built in.
+
+### Hybrid retrieval in `wiki-query` (BM25 + graph + optional vector)
+
+`wiki-query` fuses available retrieval streams with Reciprocal Rank Fusion (RRF):
+
+`RRF(d) = Σ_i 1 / (k + rank_i(d))`, default `k = 60`.
+
+Stream composition by environment:
+- With `QMD_WIKI_COLLECTION` set and backend reachable: BM25 + graph + vector
+- Without `QMD_WIKI_COLLECTION`: BM25 + graph
+- Without `_graph/` files: BM25 (+ vector if configured)
+
+Any missing stream degrades gracefully; query still answers from remaining streams.
 
 ## Modes of Operation
 

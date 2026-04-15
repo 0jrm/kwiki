@@ -192,6 +192,8 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 - **QMD semantic search (optional).** [QMD](https://github.com/tobi/qmd) is a local MCP server that indexes your wiki and source documents for fast semantic search. When `QMD_WIKI_COLLECTION` is set in `.env`, `wiki-query` runs a lex+vec pass against the collection before falling back to Grep — enabling concept-level matches that exact-string search misses. When `QMD_PAPERS_COLLECTION` is set, `wiki-ingest` queries your indexed sources before writing a new page, surfacing related work, detecting contradictions, and deciding whether to create or merge. Without QMD, both skills fall back to Grep/Glob and remain fully functional.
 
+- **Graph traversal + hybrid fusion in `wiki-query`.** Query now treats `_graph/edges.jsonl` as a first-class retrieval stream: default 1-hop graph expansion (optional 2-hop on explicit "deep/expand graph" requests), bounded by hop decay and edge-type weights. Results are fused with BM25 and optional QMD vectors using Reciprocal Rank Fusion (RRF, `k=60`), with graceful degradation to 2-stream (BM25+graph) or single-stream (BM25) when graph/vector infrastructure is absent.
+
 - **`_raw/` staging directory.** Drop rough notes, clipboard pastes, or quick captures into `_raw/` inside your vault. The next `wiki-ingest` run promotes them to proper wiki pages and removes the originals. Configured via `OBSIDIAN_RAW_DIR` in `.env` (defaults to `_raw`).
 
 ## Optional: QMD Semantic Search
@@ -214,7 +216,7 @@ By default, `wiki-ingest` and `wiki-query` use `Grep`/`Glob` for search — full
 
 **What changes with QMD enabled:**
 
-- **`wiki-query`** runs a semantic pass (lex+vec) against your wiki collection before falling back to Grep. Finds conceptually related pages even when the exact terms don't match.
+- **`wiki-query`** contributes an optional vector stream to hybrid retrieval. The final rank is fused from BM25 + graph + vector via RRF (`k=60`). If QMD is unavailable, query falls back to BM25 + graph automatically.
 - **`wiki-ingest`** queries your papers collection before writing a new page — surfaces related sources, spots contradictions, and decides whether to create a new page or merge into an existing one.
 
 Both skills degrade gracefully: if `QMD_WIKI_COLLECTION` / `QMD_PAPERS_COLLECTION` are not set, they skip the QMD step silently and use Grep instead.
