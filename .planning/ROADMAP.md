@@ -17,7 +17,7 @@ None
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Safety** — PRs #1 ★ #11 ★ #12 ★ — confidence frontmatter, PII filter, audit log (all dep-free; foundation for everything)
-- [ ] **Phase 2: Quality + Graph Foundation** — PRs #5 ★ #8 ★ — typed entity/relationship extraction + quality scoring + self-healing lint (completes MVP-5)
+- [x] **Phase 2: Quality + Graph Foundation** — PRs #5 ★ #8 ★ — typed entity/relationship extraction + quality scoring + self-healing lint (completes MVP-5)
 - [ ] **Phase 3: Lifecycle Layer** — PRs #2 #3 #4 — supersession, retention decay, consolidation tiers (all dep on #1)
 - [ ] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
 - [ ] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
@@ -41,11 +41,11 @@ Plans:
 **Goal**: Complete the MVP-5 subset with typed entity/relationship extraction (#5) and quality scoring + self-healing lint (#8). After this phase the vault has a typed graph (`_graph/entities.jsonl`, `_graph/edges.jsonl`) and pages auto-score themselves — the foundation for contradiction detection, hybrid search, and mesh sync later.
 **Depends on**: Phase 1 (PR #8 deps on #1)
 **Research**: Unlikely (entity extraction is an established NLP pattern applied to SKILL.md instructions; quality scoring is internal heuristics; the `entity-extract` skill is a new SKILL.md not a new library)
-**Plans**: TBD
+**Plans**: Complete (2 PLAN.md files, 2 SUMMARY.md files — 2026-04-15)
 
 Plans:
-- [ ] 02-01: PR #5 — New `entity-extract` skill; `_graph/` directory; write `entities.jsonl` + `edges.jsonl` on ingest
-- [ ] 02-02: PR #8 — Quality scoring on new pages + auto-fix orphans and broken links in wiki-lint
+- [x] 02-01: PR #5 — New `entity-extract` skill; `_graph/` directory; write `entities.jsonl` + `edges.jsonl` on ingest
+- [x] 02-02: PR #8 — Quality scoring on new pages + auto-fix orphans and broken links in wiki-lint (depends on 02-01)
 
 ### Phase 3: Lifecycle Layer
 **Goal**: Implement the full memory-lifecycle stack — supersession (#2), retention decay (#3), consolidation tiers (#4). Pages now evolve: contradicting claims link forward rather than overwrite, low-confidence pages decay and get flagged, and content promotes through working/episodic/semantic/procedural tiers automatically.
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Safety | 3/3 | **Complete** | 2026-04-15 |
-| 2. Quality + Graph Foundation | 0/2 | Not started | - |
+| 2. Quality + Graph Foundation | 2/2 | **Complete** | 2026-04-15 |
 | 3. Lifecycle Layer | 0/3 | Not started | - |
 | 4. Graph Traversal + Hybrid Search | 0/2 | Not started | - |
 | 5. Cross-cutting Intelligence | 0/2 | Not started | - |

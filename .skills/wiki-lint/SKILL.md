@@ -19,47 +19,69 @@ You are performing a health check on an Obsidian wiki. Your goal is to find and 
 2. Read `index.md` for the full page inventory
 3. Read `log.md` for recent activity context
 
+## Operating Modes
+
+By default `wiki-lint` is **self-healing**: it auto-fixes orphans and broken wikilinks. Use `--report-only` to get the old behavior (list issues, make no changes).
+
+- **Default (self-healing):** run all checks, auto-fix orphans + broken wikilinks, report on what was fixed and what couldn't be.
+- **`--report-only`:** run all checks, list issues, change nothing. Useful for CI and pre-merge audits.
+
+Checks that cannot be safely auto-fixed (missing frontmatter, stale content, contradictions, provenance drift) are **always reported, never auto-fixed**.
+
 ## Lint Checks
 
 Run these checks in order. Report findings as you go.
 
 ### 1. Orphaned Pages
 
-Find pages with zero incoming wikilinks. These are knowledge islands that nothing connects to.
+An orphan is a page with no incoming `[[wikilinks]]` from any other page.
 
 **How to check:**
 - Glob all `.md` files in the vault
 - For each page, Grep the rest of the vault for `[[page-name]]` references
 - Pages with zero incoming links (except `index.md` and `log.md`) are orphans
 
-**How to fix:**
-- Identify which existing pages should link to the orphan
-- Add wikilinks in appropriate sections
+**Self-healing (default):**
+1. Invoke `cross-linker --use-graph` restricted to this orphan as the target.
+2. cross-linker scans all pages for natural mentions of the orphan's title or aliases, and adds links where matches exist.
+3. If no natural match is found, skip the page and keep it listed as orphan in the report — a forced link is worse than an orphan.
+
+**Report-only mode:** list the orphan; take no action.
 
 ### 2. Broken Wikilinks
 
-Find `[[wikilinks]]` that point to pages that don't exist.
+A broken wikilink points to a page that doesn't exist.
 
 **How to check:**
 - Grep for `\[\[.*?\]\]` across all pages
 - Extract the link targets
 - Check if a corresponding `.md` file exists
 
-**How to fix:**
-- If the target was renamed, update the link
-- If the target should exist, create it
-- If the link is wrong, remove or correct it
+**Self-healing (default):** try three strategies in order.
+
+1. **Fuzzy match within category** — if the link reads `[[BM25 Scoring]]` inside a `concepts/` page, look for the closest title match in `concepts/*.md` (matching bag-of-words or near-exact name). Rewrite the link to the matched page.
+2. **Graph alias match** — check `_graph/entities.jsonl` for an entity whose `name` or aliases match the broken link text. If found, rewrite the link to the entity's primary page (same resolution as cross-linker Step 2.5).
+3. **Strip to plain text** — if both fail, rewrite `[[broken-link]]` to `broken-link` (plain text) and log the rewrite. A dead `[[link]]` is noise; plain text is honest.
+
+**Report-only mode:** list the broken link and which of the three strategies would apply; change nothing.
+
+### 2a. Quality Score Recomputation
+
+Recompute the `quality:` score for every page using the same heuristic defined in `wiki-ingest/SKILL.md` Step 5a. If a page lacks `quality:`, compute it now (the score will be written on next touch). If the computed score differs from the stored score by > 0.1, update the stored value.
+
+Pages scoring < 0.4 are flagged "low quality" in the report — no auto-fix (quality is a signal, not a blocker). The user decides whether to invest in improving the page.
+
+**Report-only mode:** compute scores, report low-quality pages, don't write scores back.
 
 ### 3. Missing Frontmatter
 
 Every page should have: title, category, tags, sources, created, updated.
 
+**Always reported, never auto-fixed** — schema completions are too lossy to generate automatically.
+
 **How to check:**
 - Grep frontmatter blocks (scope to `^---` at file heads) instead of reading every page in full
 - Flag pages missing required fields
-
-**How to fix:**
-- Add missing fields with reasonable defaults
 
 ### 3a. Missing Summary (soft warning)
 
@@ -175,26 +197,34 @@ Report findings as a structured list:
 ### Fragmented Tag Clusters (N found)
 - **#systems** — 7 pages, cohesion=0.06 ⚠️ — run cross-linker on this tag
 - **#databases** — 5 pages, cohesion=0.10 ⚠️
+
+### Fixed Automatically (N)
+- `path/to/page.md` — broken link `[[X]]` rewritten to `[[Y]]` (fuzzy match, distance 2)
+- `path/to/other.md` — broken link `[[Z]]` stripped to plain text (no resolution strategy matched)
+- `path/to/orphan.md` — added incoming link from `concepts/foo.md`
 ```
 
-## After Linting
-
-Append to `log.md`:
-```
-- [TIMESTAMP] LINT issues_found=N orphans=X broken_links=Y stale=Z contradictions=W prov_issues=P missing_summary=S fragmented_clusters=F
-```
+Each auto-fix is described with enough detail for a human to audit.
 
 **`_meta/audit.jsonl`** — Only append when a page is **actually modified** (not on report-only runs). For each page auto-fixed:
 ```json
 {"ts":"<ISO8601-with-ms>","op":"lint-fix","skill":"wiki-lint","page":"<vault-relative-path>","source":null,"action":"fix","session":null}
 ```
-One entry per page that was modified. If wiki-lint runs in report-only mode (no auto-fix), no audit entries.
+One entry per page that was modified. If wiki-lint runs in `--report-only` mode, no audit entries.
+
+## After Linting
+
+Update `log.md` with mode flag:
+```
+- [TIMESTAMP] LINT mode=self-healing|report-only issues_found=N orphans=X broken_links=Y stale=Z contradictions=W prov_issues=P missing_summary=S fragmented_clusters=F fixed=G
+```
 
 ## Quality Checklist
 
 After linting, verify:
-- [ ] Health report produced with all 8 check categories
-- [ ] `log.md` updated with LINT entry
-- [ ] Audit entries written to `_meta/audit.jsonl` for each page auto-fixed (if in fix mode)
-
-Offer to fix issues automatically or let the user decide which to address.
+- [ ] Health report produced with all check categories (orphans, broken links, quality scores, missing frontmatter, stale, contradictions, index, provenance, tag clusters)
+- [ ] `log.md` updated with LINT entry (includes mode flag)
+- [ ] Self-healing ran by default (orphans + broken links auto-fixed where possible)
+- [ ] `--report-only` flag preserves pre-PR-#8 list-only behavior when invoked
+- [ ] Quality scores recomputed; pages with drift > 0.1 updated
+- [ ] Every auto-fix logged to `_meta/audit.jsonl` (only when files actually modified)

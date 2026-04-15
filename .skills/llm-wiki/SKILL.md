@@ -199,6 +199,7 @@ sources_count: 1
 last_confirmed: 2024-03-15T10:30:00Z
 decay_rate: "medium"
 entities: []
+quality: 0.72
 created: 2024-03-15T10:30:00Z
 updated: 2024-03-15T10:30:00Z
 ---
@@ -257,6 +258,8 @@ Example:
 | `decay_rate` | `"low"` \| `"medium"` \| `"high"` | How quickly content goes stale. Low = timeless concepts. Medium = tools, APIs, practices. High = versions, pricing, current events. | `"medium"` |
 
 Pages without these fields (existing vaults, pre-v2 pages) are **not retroactively rewritten** — they're treated as `confidence: 0.5`, `decay_rate: "medium"` at read time.
+
+**`quality`** (float, 0.0–1.0): Page health score computed from seven signals (confidence, sources_count, summary presence, wikilink count, entities count, body length, freshness of `last_confirmed`). See `wiki-ingest/SKILL.md` Step 5a for the exact heuristic. Pages scoring < 0.4 are flagged "low quality" by `wiki-lint`. Default: computed at write time; pages without it get a fresh score on next lint run. Not retroactively computed on pages not being touched.
 
 ### Graph Layer
 
@@ -349,5 +352,5 @@ For details on specific operations, see the companion skills:
 - **codex-history-ingest** — Ingest Codex CLI session history
 - **data-ingest** — Ingest any raw text data
 - **wiki-query** — Answer questions against the wiki
-- **wiki-lint** — Audit and maintain wiki health
+- **wiki-lint** — Audit and maintain wiki health; self-healing by default (auto-fixes orphans + broken wikilinks); use `--report-only` for CI/audit mode
 - **wiki-setup** — Initialize a new vault
