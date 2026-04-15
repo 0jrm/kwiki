@@ -162,6 +162,8 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 ## What we added on top of Karpathy's pattern
 
+- **Canonical v2 schema + migration guide.** See `.skills/llm-wiki-v2-schema/SCHEMA.md` for the implementation-aligned source of truth for frontmatter, graph JSONL, retrieval fusion, audit semantics, and low-risk v1->v2 rollout guidance.
+
 - **Delta tracking.** A manifest tracks every source file that's been ingested: path, timestamps, which wiki pages it produced. When you come back later, it computes the delta and only processes what's new or changed. You're not re-ingesting your entire document library every time.
 
 - **Project-based organization.** Knowledge gets filed under projects when it's project-specific, globally when it's not. Both are cross-referenced with wikilinks. If you're working on 10 different codebases, each one gets its own space in the vault.

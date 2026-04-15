@@ -106,3 +106,4 @@ See `wiki-query` and `wiki-export` skills for how the filter is applied.
 ## Architecture Reference
 
 For the full pattern (three-layer architecture, page templates, project org), read `.skills/llm-wiki/SKILL.md`.
+For canonical v2 field/graph/audit/retrieval semantics and migration guidance, read `.skills/llm-wiki-v2-schema/SCHEMA.md`.
