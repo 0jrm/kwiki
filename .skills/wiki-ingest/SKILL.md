@@ -192,7 +192,31 @@ For each page in your plan:
 - Merge new information — don't just append
 - Update the `updated` timestamp in frontmatter
 - Add the new source to the `sources` list
-- Resolve any contradictions between old and new information (note them if unresolvable)
+- Resolve contradictions with explicit supersession/ambiguity handling (never silently overwrite)
+
+### Step 5x: Contradictions, Supersession, and Ambiguity
+
+When a new claim conflicts with existing page content, use this rule:
+
+- **Contradiction** = same entity + same attribute, but different asserted value.
+- Judge conflicts explicitly; if uncertain, treat as ambiguous rather than forcing supersession.
+
+On contradiction where confidence delta is decisive (`abs(new_confidence - old_confidence) >= 0.2`):
+1. Move the prior claim into a `## Superseded` section (create the section if missing).
+2. Annotate moved claim with:
+   - `superseded_on: <ISO timestamp>`
+   - `superseded_by_source: <source path/url>`
+   - `previous_confidence: <float>`
+3. Insert the new claim in the main body where the old claim lived.
+4. Increment frontmatter `supersession_count` (default `0`).
+
+On ambiguity (`abs(new_confidence - old_confidence) < 0.2`):
+- Keep both claims in place.
+- Mark both with `^[ambiguous]`.
+- Do **not** increment `supersession_count`.
+- Leave a short review note in `## Open Questions` if manual resolution is needed.
+
+Backward compatibility: pages without supersession metadata remain valid. Only add supersession fields/section when a contradiction is encountered during an update.
 
 **Write a `summary:` frontmatter field** on every new page (1–2 sentences, ≤200 characters) answering "what is this page about?" for a reader who hasn't opened it. When updating an existing page whose meaning has shifted, rewrite the summary to match the new content. This field is what `wiki-query`'s cheap retrieval path reads — a missing or stale summary forces expensive full-page reads.
 
@@ -213,7 +237,12 @@ For each page in your plan:
 - `confidence`: float 0.0–1.0. Estimate from source quality × cross-reference density. Use 0.8+ only when multiple independent primary sources agree. Use 0.3–0.5 for single-source or heavily inferred content. Default: `0.5`.
 - `sources_count`: integer count of distinct source files/URLs that contributed to this page. Increment when updating with new sources.
 - `last_confirmed`: ISO 8601 timestamp. Set to current time on create and on any substantive update.
-- `decay_rate`: one of `"low"` | `"medium"` | `"high"`. Low = definitions, math, stable patterns. Medium = tools, APIs, practices. High = versions, pricing, current events, personnel. Default: `"medium"`.
+- `decay_rate`: prefer `"slow"` | `"medium"` | `"fast"`. Slow = definitions, math, stable patterns. Medium = tools, APIs, practices. Fast = versions, pricing, current events, personnel. Default: `"medium"`.
+- Compatibility: existing pages may use `"low"`/`"high"`; treat `low -> slow` and `high -> fast` at read time. Do not rewrite pages solely for enum normalization.
+- `supersession_count`: integer count of true supersessions on this page. Default: `0`. Increment only when a contradiction causes prior claim movement into `## Superseded`.
+- `tier`: one of `"working"` | `"episodic"` | `"semantic"` | `"procedural"`. Default for new pages: `"working"`.
+- `promoted_from`: list of source page paths/IDs that fed this page during tier promotion. Default: `[]`.
+- `promotion_evidence_count`: integer evidence count supporting current tier placement. Default: `0`.
 
 Example frontmatter with confidence, graph, and quality fields:
 ```yaml
@@ -221,6 +250,10 @@ confidence: 0.7
 sources_count: 2
 last_confirmed: 2026-04-15T10:30:00Z
 decay_rate: "medium"
+supersession_count: 0
+tier: "working"
+promoted_from: []
+promotion_evidence_count: 0
 entities: [person:sarah-chen, project:kwiki, library:rank-bm25]
 quality: 0.72
 ```
@@ -230,6 +263,8 @@ quality: 0.72
 **`quality`**: float 0.0–1.0, computed by Step 5a from seven weighted signals. Populated on every new/updated page. Default: computed at write time; pages without it get a fresh score on next lint run.
 
 On update: increment `sources_count` if a new source is being added, set `last_confirmed` to now, and reconsider `confidence` in light of the new evidence. Do NOT retroactively rewrite existing pages that lack these fields — only pages being actively created or updated get them.
+
+`confidence` remains the base confidence. Any decayed confidence value is derived at lint/query time and must not overwrite base `confidence`.
 
 ### Step 5a: Compute Quality Score
 
@@ -252,6 +287,20 @@ Write the computed value to the page's `quality:` frontmatter. Pages scoring < 0
 ### Step 6: Update Cross-References
 
 After writing pages, check that wikilinks work in both directions. If page A links to page B, consider whether page B should also link back to page A.
+
+### Step 6a: Evaluate Tier Promotion
+
+After extraction and merge, evaluate whether content should be promoted upward in lifecycle tiers:
+
+- `working -> episodic`: on session close or explicit crystallization request.
+- `episodic -> semantic`: when >= 3 episodes reinforce the same claim/entity cluster.
+- `semantic -> procedural`: when >= 3 semantic facts support reproducible steps/checklists.
+
+Promotion behavior:
+- Promotions compile/copy knowledge upward; they do **not** delete lower-tier provenance by default.
+- When promoting, create or update the target-tier page and add backlinks/wikilinks between source and promoted artifacts.
+- Update `promoted_from`, increment `promotion_evidence_count`, and refresh timestamps on the promoted page.
+- Keep source pages intact unless the user explicitly asks for archival/cleanup.
 
 ### Step 6b: Extract Entities and Relationships
 
@@ -313,7 +362,13 @@ After ingesting, verify:
 - [ ] Source attribution is present for every new claim
 - [ ] Inferred and ambiguous claims are marked with `^[inferred]` / `^[ambiguous]`; `provenance:` frontmatter block is present on new and updated pages
 - [ ] Every new/updated page has a `summary:` frontmatter field (1–2 sentences, ≤200 chars)
-- [ ] New page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` frontmatter fields
+- [ ] New page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` frontmatter fields (`slow|medium|fast` preferred; `low/high` accepted for compatibility)
+- [ ] Contradictions moved prior claim into `## Superseded` with `superseded_on`, `superseded_by_source`, `previous_confidence`
+- [ ] Ambiguous conflicts marked `^[ambiguous]` without superseding
+- [ ] `supersession_count` updated only on true supersession
+- [ ] Every new page has `tier`, `promoted_from`, and `promotion_evidence_count`
+- [ ] Promotions include provenance links and evidence counts
+- [ ] Lower-tier source context retained after promotion
 - [ ] `entities:` frontmatter field is populated on every new/updated page (via entity-extract Step 6b)
 - [ ] `_graph/entities.jsonl` and `_graph/edges.jsonl` have fresh rows for this ingest
 - [ ] Page has a `quality:` frontmatter field computed by the Step 5a heuristic

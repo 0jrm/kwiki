@@ -178,6 +178,10 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 - **Provenance tracking.** Every claim on a wiki page is tagged: extracted (default), `^[inferred]` (LLM synthesis), or `^[ambiguous]` (sources disagree). A `provenance:` block in the frontmatter summarizes the mix per page, and `wiki-lint` flags pages that drift into mostly speculation. You can always tell what your wiki actually knows from what it guessed.
 
+- **Lifecycle retention + supersession.** `confidence` remains base confidence, while `wiki-lint` derives decayed confidence at read time (`decayed = confidence * exp(-k * days)`) using `slow|medium|fast` rates (with `low/high` compatibility mapping). Contradictory updates preserve history in `## Superseded` instead of overwriting prior claims.
+
+- **Consolidation tiers.** Pages move through `working -> episodic -> semantic -> procedural` as evidence accumulates, using `tier`, `promoted_from`, and `promotion_evidence_count` metadata to preserve provenance across promotions.
+
 - **Multimodal sources.** Screenshots, whiteboard photos, slide captures, and diagrams ingest the same way as text — the agent transcribes any visible text verbatim and tags interpreted content as inferred. Requires a vision-capable model.
 
 - **Wiki insights.** Beyond delta tracking, `wiki-status` can analyze the shape of your vault itself: top hubs, bridge pages (nodes whose removal would partition the graph), tag cluster cohesion scores, scored surprising connections, a graph delta since last run, and suggested questions the wiki structure is uniquely positioned to answer. Output goes to `_insights.md`.
@@ -214,6 +218,34 @@ By default, `wiki-ingest` and `wiki-query` use `Grep`/`Glob` for search — full
 - **`wiki-ingest`** queries your papers collection before writing a new page — surfaces related sources, spots contradictions, and decides whether to create a new page or merge into an existing one.
 
 Both skills degrade gracefully: if `QMD_WIKI_COLLECTION` / `QMD_PAPERS_COLLECTION` are not set, they skip the QMD step silently and use Grep instead.
+
+## Lifecycle semantics
+
+### Retention decay half-life (approximate)
+
+| Decay rate | k | Half-life (days) | Typical use |
+|---|---:|---:|---|
+| `slow` | 0.0015 | ~462 | Stable definitions, fundamentals |
+| `medium` | 0.005 | ~139 | Tools, APIs, practices |
+| `fast` | 0.02 | ~35 | Versions, pricing, fast-changing facts |
+
+Compatibility: older pages using `low`/`high` are interpreted as `slow`/`fast` at read time. Base `confidence` is never rewritten by decay.
+
+### Consolidation tiers and promotion triggers
+
+- `working`: session-local observations
+- `episodic`: bounded session summaries
+- `semantic`: cross-session facts
+- `procedural`: reusable workflows/checklists
+
+Promotion thresholds:
+- `working -> episodic`: session close or explicit crystallization
+- `episodic -> semantic`: >= 3 reinforcing episodes
+- `semantic -> procedural`: >= 3 semantic facts supporting reproducible steps
+
+Promotions compile knowledge upward; source-tier provenance remains intact by default.
+
+Future `wiki-crystallize` output should target episodic/semantic tiers to stay consistent with this lifecycle model.
 
 ### `_raw/` Staging Directory
 

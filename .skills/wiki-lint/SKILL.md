@@ -103,6 +103,39 @@ Pages whose `updated` timestamp is old relative to their sources.
 - Compare page `updated` timestamps to source file modification times
 - Flag pages where sources have been modified after the page was last updated
 
+### 4a. Retention Decay (read-time only)
+
+Compute decayed confidence on every lint run using:
+
+`decayed = base_confidence * exp(-k * days_since_last_confirmed)`
+
+Rate constants:
+- `slow`: `k = 0.0015`
+- `medium`: `k = 0.005`
+- `fast`: `k = 0.02`
+
+Compatibility mapping at read time:
+- `low -> slow`
+- `high -> fast`
+
+Do not rewrite pages solely to normalize enum names. Keep base `confidence` untouched.
+
+**How to check:**
+- For each page, read `confidence`, `last_confirmed`, and `decay_rate` (default confidence=0.5, decay_rate=medium when missing).
+- Compute decayed confidence with non-negative day deltas and clamped confidence in [0,1].
+- Add a report section `Decayed below threshold` for pages where `decayed < 0.25`.
+
+### 4b. Reconfirm mode (`--reconfirm`)
+
+When `--reconfirm` is provided, process pages in `Decayed below threshold` with explicit branch outcomes:
+
+1. Prompt for each page:
+   - **Re-ingest fresh source** (preferred) -> route through ingest flow; ingest updates `last_confirmed`.
+   - **Archive page** -> move/mark per existing archive convention.
+2. Record outcome in report.
+
+`--reconfirm` supports decisions; it does not mutate base `confidence`.
+
 ### 5. Contradictions
 
 Claims that conflict across pages.
@@ -115,6 +148,37 @@ Claims that conflict across pages.
 **How to fix:**
 - Add an "Open Questions" section noting the contradiction
 - Reference both sources and their claims
+
+### 5a. Supersession Hotspots and Ambiguity Backlog
+
+Supersession is lifecycle metadata, not an error. Lint should surface volatility, not auto-fix it.
+
+**How to check:**
+- Flag pages with `supersession_count > 3` and at least one supersession in the last 30 days as volatile.
+- Count `^[ambiguous]` markers per page; if count > 5, flag for manual reconciliation.
+- Never auto-edit supersession history in lint.
+
+### 8a. Tier Health and Promotion Readiness
+
+Lifecycle tiers:
+- `working`
+- `episodic`
+- `semantic`
+- `procedural`
+
+**Tier Drift:**
+- Flag `semantic`/`procedural` pages for demotion-review when base confidence is low or decayed confidence is high-risk.
+
+**Promotion Opportunities:**
+- Flag `working`/`episodic` pages for promotion when evidence thresholds are met:
+  - `working -> episodic`: session close or explicit crystallization
+  - `episodic -> semantic`: >= 3 reinforcing episodes
+  - `semantic -> procedural`: >= 3 semantic facts supporting reproducible steps
+
+**Provenance Gaps:**
+- Flag promoted pages missing backlinks/wikilinks to lower-tier source pages listed in `promoted_from`.
+
+No auto-promotion by default; report opportunities and optionally emit actionable command suggestions.
 
 ### 6. Index Consistency
 
@@ -178,8 +242,15 @@ Report findings as a structured list:
 ### Stale Content (N found)
 - `references/paper-x.md` — source modified 2024-03-10, page last updated 2024-01-05
 
+### Decayed below threshold (N found)
+- `concepts/foo.md` — base=0.62, decayed=0.21, last_confirmed=2025-11-01, decay_rate=fast
+
 ### Contradictions (N found)
 - `concepts/scaling.md` claims "X" but `synthesis/efficiency.md` claims "not X"
+
+### Supersession Hotspots (N found)
+- `entities/vendor-a.md` — supersession_count=5, last_superseded=2026-04-02 (volatile)
+- `concepts/pricing-model.md` — ambiguous markers=7 (manual reconciliation needed)
 
 ### Index Issues (N found)
 - `concepts/new-page.md` exists on disk but not in index.md
@@ -197,6 +268,15 @@ Report findings as a structured list:
 ### Fragmented Tag Clusters (N found)
 - **#systems** — 7 pages, cohesion=0.06 ⚠️ — run cross-linker on this tag
 - **#databases** — 5 pages, cohesion=0.10 ⚠️
+
+### Tier Drift (N found)
+- `skills/deploy-runbook.md` — tier=procedural, decayed=0.18 (demotion review)
+
+### Promotion Opportunities (N found)
+- `journal/2026-04-15.md` — tier=working, evidence_count=3 -> eligible for episodic promotion
+
+### Provenance Gaps (N found)
+- `concepts/cache-invalidation.md` — tier=semantic, missing backlinks to `promoted_from` pages
 
 ### Fixed Automatically (N)
 - `path/to/page.md` — broken link `[[X]]` rewritten to `[[Y]]` (fuzzy match, distance 2)
@@ -228,3 +308,11 @@ After linting, verify:
 - [ ] `--report-only` flag preserves pre-PR-#8 list-only behavior when invoked
 - [ ] Quality scores recomputed; pages with drift > 0.1 updated
 - [ ] Every auto-fix logged to `_meta/audit.jsonl` (only when files actually modified)
+- [ ] Decay computed on read; base confidence left unchanged
+- [ ] `Decayed below threshold` report generated (`decayed < 0.25`)
+- [ ] `--reconfirm` workflow documented with re-ingest/archive outcomes
+- [ ] Supersession hotspots detected and reported
+- [ ] Ambiguous-claim accumulation detected and reported
+- [ ] Tier Drift reported
+- [ ] Promotion Opportunities reported
+- [ ] Provenance gaps reported

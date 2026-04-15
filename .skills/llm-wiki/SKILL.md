@@ -198,6 +198,10 @@ confidence: 0.5
 sources_count: 1
 last_confirmed: 2024-03-15T10:30:00Z
 decay_rate: "medium"
+supersession_count: 0
+tier: "working"
+promoted_from: []
+promotion_evidence_count: 0
 entities: []
 quality: 0.72
 created: 2024-03-15T10:30:00Z
@@ -243,6 +247,40 @@ Example:
 - GPT-4 was trained on roughly 13T tokens. ^[ambiguous]
 ```
 
+### Supersession pattern (contradiction-safe updates)
+
+Contradiction rule: same entity + same attribute, different asserted value.
+
+When contradiction is decisive (`abs(new_confidence - old_confidence) >= 0.2`), move prior claim into `## Superseded` and annotate:
+
+```markdown
+## Superseded
+- Model context window is 128k tokens.
+  - superseded_on: 2026-04-15T10:30:00Z
+  - superseded_by_source: releases/provider-x-2026-04.md
+  - previous_confidence: 0.64
+```
+
+When confidence delta is small (`< 0.2`), keep both claims and mark each `^[ambiguous]` rather than superseding.
+
+Worked example (before/after):
+
+Before:
+```markdown
+- Provider X context window is 128k tokens.
+```
+
+After contradiction with stronger source:
+```markdown
+- Provider X context window is 256k tokens.
+
+## Superseded
+- Provider X context window is 128k tokens.
+  - superseded_on: 2026-04-15T10:30:00Z
+  - superseded_by_source: docs/provider-x-release-notes.md
+  - previous_confidence: 0.62
+```
+
 **Why this syntax:**
 - `^[...]` is footnote-adjacent in Obsidian — renders cleanly and never collides with `[[wikilinks]]`.
 - Inline (suffix) so a single bullet stays a single bullet.
@@ -255,9 +293,30 @@ Example:
 | `confidence` | float 0.0–1.0 | Reliability estimate. 0.8+ = multiple independent sources agree. 0.5 = single source or inferred. 0.3 = speculative. | `0.5` |
 | `sources_count` | int | Distinct sources that contributed to this page. Increment on each update that adds a new source. | `1` |
 | `last_confirmed` | ISO 8601 | When was this content last reviewed and still deemed accurate? Set to ingest time on create; update on substantive edits. | ingest timestamp |
-| `decay_rate` | `"low"` \| `"medium"` \| `"high"` | How quickly content goes stale. Low = timeless concepts. Medium = tools, APIs, practices. High = versions, pricing, current events. | `"medium"` |
+| `decay_rate` | `"slow"` \| `"medium"` \| `"fast"` | How quickly content goes stale. Slow = timeless concepts. Medium = tools, APIs, practices. Fast = versions, pricing, current events. (`low`/`high` are read-time aliases.) | `"medium"` |
+| `supersession_count` | int | Number of true contradiction supersessions recorded on this page. | `0` |
+| `tier` | `"working"` \| `"episodic"` \| `"semantic"` \| `"procedural"` | Lifecycle tier of this page in the consolidation model. | `"working"` |
+| `promoted_from` | list[string] | Source pages/claims that promoted into this page. | `[]` |
+| `promotion_evidence_count` | int | Number of reinforcing artifacts supporting the current tier placement. | `0` |
 
 Pages without these fields (existing vaults, pre-v2 pages) are **not retroactively rewritten** — they're treated as `confidence: 0.5`, `decay_rate: "medium"` at read time.
+
+Retention decay is derived at lint/query time (`decayed = base_confidence * exp(-k * days_since_last_confirmed)`) and must not overwrite base `confidence`.
+
+### Consolidation tiers
+
+Tier model:
+- `working`: raw, session-local, low-confidence observations
+- `episodic`: session summaries with bounded context and provenance
+- `semantic`: stable cross-session facts abstracted from episodes
+- `procedural`: repeatable workflows/checklists distilled from semantic evidence
+
+Promotion thresholds:
+- `working -> episodic`: session close or explicit crystallization
+- `episodic -> semantic`: >= 3 episodes reinforce same claim/entity cluster
+- `semantic -> procedural`: >= 3 semantic facts support reproducible steps
+
+Promotions compile knowledge upward and preserve lower-tier provenance by default. Use `promoted_from` links and wikilinks between source and promoted pages.
 
 **`quality`** (float, 0.0–1.0): Page health score computed from seven signals (confidence, sources_count, summary presence, wikilink count, entities count, body length, freshness of `last_confirmed`). See `wiki-ingest/SKILL.md` Step 5a for the exact heuristic. Pages scoring < 0.4 are flagged "low quality" by `wiki-lint`. Default: computed at write time; pages without it get a fresh score on next lint run. Not retroactively computed on pages not being touched.
 
