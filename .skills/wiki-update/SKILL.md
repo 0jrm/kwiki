@@ -20,6 +20,10 @@ You are distilling knowledge from the current project into the user's Obsidian w
 3. Read `$OBSIDIAN_VAULT_PATH/.manifest.json` to check if this project has been synced before.
 4. Read `$OBSIDIAN_VAULT_PATH/index.md` to know what the wiki already contains.
 
+### Session hook start (`on_session_start`, optional)
+
+At workflow start, optionally invoke `on_session_start` for preflight checks (vault health, stale-work scan, optional status snapshot). This hook is opt-in and additive; `wiki-update` behavior is unchanged if it is not invoked. Hook failures must degrade gracefully (warn and continue).
+
 ## Step 1: Understand the Project
 
 Figure out what this project is by scanning the current working directory:
@@ -40,6 +44,14 @@ Check `.manifest.json` for this project:
 - **Synced before?** Look at `last_commit_synced`. Only consider what changed since then. Use `git log <last_commit>..HEAD --oneline` to see what's new.
 
 If nothing meaningful changed since last sync, tell the user and stop.
+
+### Collaboration preflight (`wiki-sync`, optional)
+
+If collaborative mode is active or a large write batch is expected, run `wiki-sync` in `preflight` mode before distillation:
+
+- Reconcile local vs peer snapshot safely.
+- If sync cannot reconcile safely, preserve local planned writes and emit review instructions.
+- **Never discard local content** without explicit user approval.
 
 ## Step 3: Decide What to Distill
 
@@ -200,6 +212,14 @@ After writing the project page, append one entry per page written:
 ```
 Use `"action": "update"` if the page already existed. Create `_meta/` directory first if it doesn't exist.
 
+### Collaboration post-write (`wiki-sync`, optional)
+
+When collaborative mode is active, run `wiki-sync` after write completion (`postwrite` mode) to share/merge updates. If unresolved conflicts remain, keep local writes and emit `requires_review` guidance.
+
+### Session hook end (`on_session_end`, optional)
+
+At workflow completion, optionally invoke `on_session_end` to produce wrap-up actions (crystallization suggestion, backlog capture, audit checkpoint). This call is fail-soft: hook errors do not invalidate successful primary writes.
+
 ## Quality Scoring
 
 Every new or updated project page gets a `quality:` frontmatter field. Compute it using the same seven-signal heuristic defined in `wiki-ingest/SKILL.md` Step 5a. For project pages synced from an active codebase:
@@ -218,6 +238,10 @@ After syncing, verify:
 - [ ] Project page has `confidence`, `sources_count`, `last_confirmed`, `decay_rate` fields
 - [ ] Project page has a `quality:` frontmatter field computed via the wiki-ingest heuristic
 - [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
+- [ ] `on_session_start` invoked at workflow start when hooks are enabled
+- [ ] `on_session_end` invoked at workflow completion when hooks are enabled
+- [ ] Collaborative mode includes `wiki-sync` preflight and post-write reconciliation
+- [ ] Any hook/sync failure degrades gracefully and preserves primary `wiki-update` success
 
 ## Tips
 

@@ -177,6 +177,16 @@ Before writing anything, plan which pages to update or create. Aim for 10-15 pag
 - If it's new, which category does it belong in?
 - What `[[wikilinks]]` should connect it to existing pages?
 
+### Step 4b: Collaboration preflight (`wiki-sync`, optional)
+
+In collaborative environments (multiple agents/workstations writing to the same logical vault), run `wiki-sync` in `preflight` mode before large write batches.
+
+- If reconciliation is clean, proceed with ingest.
+- If reconciliation returns `requires_review`, preserve local planned writes and surface review instructions.
+- **Never discard local content** automatically.
+
+Single-agent workflows remain unchanged when `wiki-sync` is not called.
+
 ### Step 4a: Contradiction Preflight (cross-page)
 
 Before writing, run a contradiction scan across existing pages that overlap the same entities/attributes:
@@ -371,6 +381,15 @@ If the manifest doesn't exist yet, create it with `version: 1`.
 ```
 Use `"action": "update"` if the page already existed. One entry per page, appended after the write succeeds.
 
+### Step 8: Run `on_new_source` hook (optional, fail-soft)
+
+After a source unit is fully processed (pages written + `_graph` updates + `index.md`/`log.md`/`.manifest.json` updates), invoke `on_new_source` once per source unit:
+
+- Do not call per line/chunk.
+- Pass source path and touched pages.
+- If hook execution fails, **degrade gracefully**: report warning, keep primary ingest success intact.
+- Hook behavior is additive; when unused, ingest behavior is unchanged.
+
 ## Handling Multiple Sources
 
 When ingesting a directory, process sources one at a time but maintain a running awareness of the full batch. Later sources may strengthen or contradict earlier ones — that's fine, just update pages as you go.
@@ -401,6 +420,9 @@ After ingesting, verify:
 - [ ] Quality score is in `[0.0, 1.0]` with 2 decimals
 - [ ] PII filter ran on source content; any redactions noted in summary
 - [ ] Audit entries written to `_meta/audit.jsonl` for all pages created/updated
+- [ ] `on_new_source` invoked once per ingested source unit (when hooks are enabled)
+- [ ] Hook failures degrade gracefully and do not invalidate the primary ingest write
+- [ ] `wiki-sync` preflight used for collaborative large-batch ingest (when collaboration mode is enabled)
 
 ## Reference
 

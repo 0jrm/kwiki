@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Lifecycle Layer** — PRs #2 #3 #4 — supersession, retention decay, consolidation tiers (all dep on #1)
 - [x] **Phase 4: Graph Traversal + Hybrid Search** — PRs #6 #7 — walk typed edges in wiki-query + BM25/vector/graph fusion with RRF (dep on #5, #6)
 - [x] **Phase 5: Cross-cutting Intelligence** — PRs #9 #10 — contradiction detection on write + crystallization skill (dep on #1, #2, #5)
-- [ ] **Phase 6: Automation + Collaboration** — PRs #13 #14 — event hooks + multi-agent mesh sync (dep on most above)
+- [x] **Phase 6: Automation + Collaboration** — PRs #13 #14 — event hooks + multi-agent mesh sync (dep on most above)
 - [ ] **Phase 7: Schema + Migration Docs** — PR #15 — canonical v2 schema document + migration guide for existing users (dep on all)
 
 ## Phase Details
@@ -85,11 +85,11 @@ Plans:
 **Depends on**: Phase 1 through Phase 5 (#13 deps most above; #14 deps #1 + #12)
 **Research**: Likely (event hook architecture choices — file watchers vs. explicit hook calls in SKILL.md; conflict resolution strategy for concurrent vault writes in mesh sync)
 **Research topics**: Hook invocation patterns in agent frameworks (explicit call vs. trigger); CRDT or merge strategies for concurrent JSONL/markdown writes; coordination protocol for multi-agent vault ownership
-**Plans**: TBD
+**Plans**: Complete (2 PLAN.md files — 2026-04-15)
 
 Plans:
-- [ ] 06-01: PR #13 — Event hooks in `.skills/_hooks/`; `on_session_start`, `on_session_end`, `on_new_source` lifecycle triggers
-- [ ] 06-02: PR #14 — `wiki-sync` skill; conflict resolution across vault states for multi-agent mesh workflows
+- [x] 06-01: PR #13 — Event hooks in `.skills/_hooks/`; `on_session_start`, `on_session_end`, `on_new_source` lifecycle triggers
+- [x] 06-02: PR #14 — `wiki-sync` skill; conflict resolution across vault states for multi-agent mesh workflows
 
 ### Phase 7: Schema + Migration Docs
 **Goal**: Ship the canonical v2 schema document and migration guide for existing users — the definitive reference for every frontmatter field, `_graph/` format, `_meta/` structure, and upgrade path from a v1 vault.
@@ -112,5 +112,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Lifecycle Layer | 3/3 | **Complete** | 2026-04-15 |
 | 4. Graph Traversal + Hybrid Search | 2/2 | **Complete** | 2026-04-15 |
 | 5. Cross-cutting Intelligence | 2/2 | **Complete** | 2026-04-15 |
-| 6. Automation + Collaboration | 0/2 | Not started | - |
+| 6. Automation + Collaboration | 2/2 | **Complete** | 2026-04-15 |
 | 7. Schema + Migration Docs | 0/1 | Not started | - |

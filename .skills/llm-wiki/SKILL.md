@@ -35,6 +35,12 @@ The wiki lives at the path configured via `OBSIDIAN_VAULT_PATH` in `.env`.
 
 The rules governing how the wiki is structured — categories, conventions, page templates, and operational workflows. The schema tells the LLM *how* to maintain the wiki.
 
+On top of this, an additive automation/collaboration layer can be enabled:
+- Event hooks in `.skills/_hooks/`: `on_session_start`, `on_new_source`, `on_session_end`
+- Mesh sync via `wiki-sync` for deterministic multi-agent reconciliation
+
+These are opt-in. If hooks/sync are never invoked, single-agent behavior remains unchanged.
+
 ## Wiki Organization
 
 The vault has two levels of structure: **categories** (what kind of knowledge) and **projects** (where the knowledge came from).
@@ -177,6 +183,8 @@ Append-only audit log. Every vault write operation appends one JSON line here. N
 | `session` | string \| null | session ID | Reserved for future hook/mesh-sync use; `null` for now |
 
 **Append pattern:** One entry per page per write, appended **after** a successful write (not before). For bulk operations (batch ingest, rebuild), append one entry per page — not one entry for the whole run.
+
+When `wiki-sync` is used, include sync outcome metadata (`merged`, `requires_review`, `aborted`) and conflict counts by class in the appended record.
 
 ## Page Template
 
@@ -436,6 +444,25 @@ The wiki supports three ingest modes:
 
 Use `wiki-status` to see the delta and get a recommendation. Use `wiki-rebuild` for archive/rebuild/restore operations.
 
+### Event hooks
+
+Optional lifecycle hooks can run at operational boundaries:
+- `on_session_start`: preflight health and stale-work scan
+- `on_new_source`: post-ingest normalization after each source unit
+- `on_session_end`: wrap-up summary and crystallization suggestion
+
+Hook invocation is fail-soft and additive. Primary write flows succeed even when optional hook actions fail.
+
+### Mesh sync (`wiki-sync`)
+
+In collaborative mode, run `wiki-sync` before/after large writes. Conflict classes are:
+- `non_overlapping`
+- `same_page_non_overlapping_sections`
+- `same_claim_conflict`
+- `structural_conflict`
+
+Only safe classes auto-merge; unresolved cases require explicit review. Local content is preserved unless the user explicitly approves overwrite.
+
 ## Reference
 
 For details on specific operations, see the companion skills:
@@ -450,3 +477,5 @@ For details on specific operations, see the companion skills:
 - **wiki-query** — Answer questions against the wiki
 - **wiki-lint** — Audit and maintain wiki health; self-healing by default (auto-fixes orphans + broken wikilinks); use `--report-only` for CI/audit mode
 - **wiki-setup** — Initialize a new vault
+- **wiki-sync** — Reconcile multi-agent wiki states with deterministic, class-based conflict handling
+- **on_session_start / on_new_source / on_session_end** — Optional event hooks for session and ingest boundary automation

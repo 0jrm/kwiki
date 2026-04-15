@@ -120,6 +120,14 @@ Append to `log.md`:
 ```
 All rebuild pages use `"action": "create"` since rebuild starts from a cleared vault.
 
+### Step 5: Collaboration sync checkpoint (`wiki-sync`, optional)
+
+If collaborative mode is enabled, run `wiki-sync` immediately after rebuild completion:
+
+- Use `rebuild-followup` mode to reconcile large structural rewrites.
+- If sync reports unresolved structural conflicts, preserve local rebuilt state and emit explicit reconciliation steps.
+- **Never discard local content** automatically.
+
 ## Mode 3: Restore from Archive
 
 When the user wants to go back to a previous state.
@@ -173,3 +181,5 @@ After rebuilding, verify:
 - [ ] Archive exists at `_archives/<timestamp>/` with `archive-meta.json`
 - [ ] `log.md` updated with REBUILD entry
 - [ ] Audit entries written to `_meta/audit.jsonl` for each page written during rebuild
+- [ ] In collaborative mode, `wiki-sync` run after rebuild and outcomes recorded
+- [ ] Unresolved sync conflicts do not discard local rebuilt content without explicit approval

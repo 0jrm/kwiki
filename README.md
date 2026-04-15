@@ -198,6 +198,10 @@ A `.manifest.json` tracks every source that's been ingested — path, timestamps
 
 - **`_raw/` staging directory.** Drop rough notes, clipboard pastes, or quick captures into `_raw/` inside your vault. The next `wiki-ingest` run promotes them to proper wiki pages and removes the originals. Configured via `OBSIDIAN_RAW_DIR` in `.env` (defaults to `_raw`).
 
+- **Event hooks (opt-in, additive).** Session and ingest boundary hooks (`on_session_start`, `on_new_source`, `on_session_end`) make preflight, post-ingest normalization, and wrap-up behavior explicit. Hook failures are fail-soft and do not invalidate primary writes.
+
+- **Mesh sync for collaboration.** `wiki-sync` adds deterministic multi-agent reconciliation with four conflict classes (`non_overlapping`, `same_page_non_overlapping_sections`, `same_claim_conflict`, `structural_conflict`) and audited outcomes (`merged`, `requires_review`, `aborted`). Single-agent flows remain unchanged when sync is not used.
+
 ## Optional: QMD Semantic Search
 
 By default, `wiki-ingest` and `wiki-query` use `Grep`/`Glob` for search — fully functional, no extra setup. If your vault grows large or you want concept-level matches across your sources, you can plug in [QMD](https://github.com/tobi/qmd): a local MCP server that runs lex+vec queries against indexed collections.
@@ -282,6 +286,10 @@ Everything lives in `.skills/`. Each skill is a markdown file the agent reads wh
 | `llm-wiki`              | The core pattern and architecture reference       | `/llm-wiki`              |
 | `wiki-update`           | Sync current project's knowledge into the vault   | `/wiki-update`           |
 | `wiki-export`           | Export vault graph to JSON, GraphML, Neo4j, HTML  | `/wiki-export`           |
+| `wiki-sync`             | Reconcile multi-agent vault state with conflict classes | `/wiki-sync`         |
+| `_hooks/on_session_start` | Session preflight hook (optional)              | (invoked by workflows)   |
+| `_hooks/on_new_source`  | Post-ingest normalization hook (optional)         | (invoked by workflows)   |
+| `_hooks/on_session_end` | Session wrap-up hook (optional)                   | (invoked by workflows)   |
 | `skill-creator`         | Create new skills                                 | `/skill-creator`         |
 
 > **Note:** Slash commands (`/skill-name`) work in Claude Code, Cursor, and Windsurf. In other agents, just describe what you want and the agent will find the right skill.
@@ -328,8 +336,12 @@ obsidian-wiki/
 │   ├── cross-linker/SKILL.md
 │   ├── tag-taxonomy/SKILL.md
 │   ├── wiki-update/SKILL.md
+│   ├── wiki-sync/SKILL.md
 │   ├── llm-wiki/SKILL.md
 │   ├── wiki-export/SKILL.md
+│   ├── _hooks/on_session_start/SKILL.md
+│   ├── _hooks/on_new_source/SKILL.md
+│   ├── _hooks/on_session_end/SKILL.md
 │   └── skill-creator/SKILL.md
 │
 ├── CLAUDE.md                         # Bootstrap → Claude Code / Kilocode

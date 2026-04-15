@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Ingesting more sources makes the wiki more useful, not noisier — knowledge compounds rather than rots
-**Current focus:** Phase 6 — Automation + Collaboration (ready to start)
+**Current focus:** Phase 7 — Schema + Migration Docs (ready to start)
 
 ## Current Position
 
-Phase: 5 of 7 (Cross-cutting Intelligence) — **COMPLETE**
+Phase: 6 of 7 (Automation + Collaboration) — **COMPLETE**
 Plan: 2/2 complete
-Status: Phase 5 executed (05-01, 05-02 complete); Phase 6 ready
-Last activity: 2026-04-15 — Phase 5 executed and summary artifacts created
+Status: Phase 6 executed (06-01, 06-02 complete); Phase 7 ready
+Last activity: 2026-04-15 — Phase 6 executed and summary artifacts created
 
-Progress: ████████░░ 79%
+Progress: █████████░ 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 15
 - Average duration: ~11 min/plan
-- Total execution time: ~142 min
+- Total execution time: ~164 min
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: ████████░░ 79%
 | 3. Lifecycle Layer | 3 | ~33 min | ~11 min |
 | 4. Graph Traversal + Hybrid Search | 2 | ~22 min | ~11 min |
 | 5. Cross-cutting Intelligence | 2 | ~22 min | ~11 min |
+| 6. Automation + Collaboration | 2 | ~22 min | ~11 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03, 04-01, 04-02, 05-01, 05-02
-- Trend: steady execution; Phase 5 reasoning layer landed cleanly, ready for automation/collaboration work
+- Last 5 plans: 04-02, 05-01, 05-02, 06-01, 06-02
+- Trend: steady execution; automation and collaboration layer landed cleanly, ready for schema/migration documentation
 
 ## Accumulated Context
 
@@ -61,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-15
-Stopped at: Phase 5 complete — ready to begin 06-01 event hooks execution
+Stopped at: Phase 6 complete — ready to begin 07-01 schema + migration docs
 Resume file: None
